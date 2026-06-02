@@ -4,6 +4,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const axios = require('axios');
 
 const app = express();
 const PORT = process.env.PORT || 3004;
@@ -28,7 +29,9 @@ app.post('/solicitar-acceso', async (req, res) => {
         } = req.body;
 
         // Validar campos obligatorios
-        if (!dni || !apellido || !nombre || !profesion || !email || !matricula) {
+        const sinMatricula = ['enfermera', 'preventivista'];
+        if (!dni || !apellido || !nombre || !profesion || !email || 
+            (!matricula && !sinMatricula.includes(profesion))) {
             return res.json({ success: false, message: 'Completá todos los campos obligatorios.' });
         }
 
@@ -87,6 +90,7 @@ app.post('/login', async (req, res) => {
 
         // Verificar contraseña
         const passwordOk = await bcrypt.compare(password, profesional.password_hash);
+        console.log('Password ok:', passwordOk);
         if (!passwordOk) {
             return res.json({ success: false, message: 'Usuario o contraseña incorrectos.' });
         }
@@ -203,13 +207,22 @@ app.post('/aprobar-usuario', async (req, res) => {
             .eq('dni', dni);
 
         console.log(`✅ Usuario aprobado: ${usuario} / ${passwordTemporal}`);
-        res.json({ success: true, usuario, passwordTemporal, message: `Usuario creado: ${usuario}` });
+        // Enviar email con credenciales
+        axios.post(process.env.EMAIL_SCRIPT_URL, {
+            nombre: prof.nombre,
+            apellido: prof.apellido,
+            email: prof.email,
+            usuario,
+            passwordTemporal
+        }).then(() => console.log('✅ Email enviado a:', prof.email))
+        .catch(e => console.warn('Email falló:', e.message));
+            res.json({ success: true, usuario, passwordTemporal, message: `Usuario creado: ${usuario}` });
 
-    } catch (error) {
-        console.error('Error en /aprobar-usuario:', error.message);
-        res.status(500).json({ success: false, message: 'Error de conexión.' });
-    }
-});
+        } catch (error) {
+            console.error('Error en /aprobar-usuario:', error.message);
+            res.status(500).json({ success: false, message: 'Error de conexión.' });
+        }
+    });
 
 // ── LISTAR SOLICITUDES PENDIENTES ──
 app.get('/solicitudes-pendientes', async (req, res) => {

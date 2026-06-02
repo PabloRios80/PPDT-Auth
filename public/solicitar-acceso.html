@@ -103,7 +103,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Matrícula profesional <span class="text-red-500">*</span></label>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Matrícula profesional <span id="matriculaReq" class="text-red-500">*</span><span id="matriculaOpc" class="text-gray-400 font-normal hidden"> (opcional)</span></label>
                                 <input type="text" id="matricula"
                                     class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="Nº de matrícula">
@@ -119,10 +119,10 @@
                                 <select id="prestador_id"
                                     class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                                     <option value="">Seleccioná el prestador</option>
-                                    <option value="1">IAPOS — Prestador interno</option>
-                                    <option value="2">Laboratorio Bioquímico</option>
-                                    <option value="3">Diagnóstico por Imágenes</option>
-                                    <option value="4">Gastroenterología</option>
+                                    <option value="1">IAPOS — Santa Fe</option>
+                                    <option value="2">IAPOS — Rosario</option>
+                                    <option value="3">IAPOS — Coronda</option>
+                                    <option value="4">ATEM</option>
                                 </select>
                             </div>
                         </div>
@@ -156,58 +156,82 @@
     </footer>
 
     <script>
-        document.getElementById('formSolicitud').addEventListener('submit', async function(e) {
-            e.preventDefault();
+    // ── CAMBIO DINÁMICO MATRÍCULA ──
+    document.getElementById('profesion').addEventListener('change', function() {
+        const sinMatricula = ['enfermera', 'preventivista'];
+        const req = document.getElementById('matriculaReq');
+        const opc = document.getElementById('matriculaOpc');
+        if (sinMatricula.includes(this.value)) {
+            req.classList.add('hidden');
+            opc.classList.remove('hidden');
+        } else {
+            req.classList.remove('hidden');
+            opc.classList.add('hidden');
+        }
+    });
 
-            const btn = document.getElementById('btnEnviar');
-            const msg = document.getElementById('mensajeResultado');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...';
+    // ── ENVÍO DEL FORMULARIO ──
+    document.getElementById('formSolicitud').addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-            const data = {
-                dni:              document.getElementById('dni').value.trim(),
-                apellido:         document.getElementById('apellido').value.trim(),
-                nombre:           document.getElementById('nombre').value.trim(),
-                fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
-                profesion:        document.getElementById('profesion').value,
-                universidad:      document.getElementById('universidad').value.trim(),
-                matricula:        document.getElementById('matricula').value.trim(),
-                telefono:         document.getElementById('telefono').value.trim(),
-                email:            document.getElementById('email').value.trim(),
-                prestador_id:     document.getElementById('prestador_id').value || null,
-                observaciones:    document.getElementById('observaciones').value.trim()
-            };
+        const btn = document.getElementById('btnEnviar');
+        const msg = document.getElementById('mensajeResultado');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...';
 
-            try {
-                const res = await fetch('/solicitar-acceso', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                const result = await res.json();
+        const data = {
+            dni:              document.getElementById('dni').value.trim(),
+            apellido:         document.getElementById('apellido').value.trim(),
+            nombre:           document.getElementById('nombre').value.trim(),
+            fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+            profesion:        document.getElementById('profesion').value,
+            universidad:      document.getElementById('universidad').value.trim(),
+            matricula:        document.getElementById('matricula').value.trim(),
+            telefono:         document.getElementById('telefono').value.trim(),
+            email:            document.getElementById('email').value.trim(),
+            prestador_id:     document.getElementById('prestador_id').value || null,
+            observaciones:    document.getElementById('observaciones').value.trim()
+        };
 
-                msg.classList.remove('hidden', 'bg-green-50', 'text-green-700', 'border-green-200',
-                                     'bg-red-50', 'text-red-700', 'border-red-200');
-                msg.classList.add('border');
+        // Validación frontend
+        const sinMatricula = ['enfermera', 'preventivista'];
+        if (!data.dni || !data.apellido || !data.nombre || !data.profesion || !data.email ||
+            (!data.matricula && !sinMatricula.includes(data.profesion))) {
+            msg.classList.remove('hidden');
+            msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
+            msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Completá todos los campos obligatorios.';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+            return;
+        }
 
-                if (result.success) {
-                    msg.classList.add('bg-green-50', 'text-green-700', 'border-green-200');
-                    msg.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + result.message;
-                    document.getElementById('formSolicitud').reset();
-                } else {
-                    msg.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
-                    msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>' + result.message;
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
-                }
-            } catch(err) {
-                msg.classList.remove('hidden');
-                msg.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
-                msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Error de conexión. Intentá de nuevo.';
+        try {
+            const res = await fetch('/solicitar-acceso', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await res.json();
+
+            msg.classList.remove('hidden');
+            if (result.success) {
+                msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-green-50 text-green-700 border-green-200';
+                msg.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + result.message;
+                document.getElementById('formSolicitud').reset();
+            } else {
+                msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
+                msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>' + result.message;
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
             }
-        });
-    </script>
+        } catch(err) {
+            msg.classList.remove('hidden');
+            msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
+            msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Error de conexión. Intentá de nuevo.';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+        }
+    });
+</script>
 </body>
 </html>
