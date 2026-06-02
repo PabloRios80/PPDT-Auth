@@ -218,6 +218,8 @@
                 msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-green-50 text-green-700 border-green-200';
                 msg.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + result.message;
                 document.getElementById('formSolicitud').reset();
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
             } else {
                 msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
                 msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>' + result.message;

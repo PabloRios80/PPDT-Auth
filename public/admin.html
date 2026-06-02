@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin — Solicitudes de Acceso</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>body { font-family: 'Montserrat', sans-serif; }</style>
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+    <!-- HEADER -->
+    <header style="background-color:#014189; padding:0; margin:0;">
+        <div style="background-color:#014189; padding:12px 20px; display:flex; align-items:center; gap:16px; max-width:1080px; margin:0 auto;">
+            <img src="images/logo_iapos.png" alt="Logo IAPOS" style="height:50px; display:block;">
+            <div>
+                <div style="font-family:'Montserrat',sans-serif; font-size:16px; font-weight:700; color:#fff;">
+                    Administración — Día Preventivo
+                </div>
+                <div style="font-family:'Montserrat',sans-serif; font-size:11px; color:#00A8E7; font-weight:600; text-transform:uppercase; letter-spacing:0.1em;">
+                    Panel de gestión de accesos
+                </div>
+            </div>
+        </div>
+        <div style="background-color:#00A8E7; height:4px;"></div>
+    </header>
+
+    <main class="flex-grow py-8">
+        <div style="max-width:1080px; margin:0 auto; padding:0 16px;">
+
+            <!-- LOGIN ADMIN -->
+            <div id="panelLoginAdmin" class="bg-white rounded-xl shadow-lg p-8 border border-blue-100 max-w-md mx-auto">
+                <h2 class="text-lg font-bold text-blue-900 mb-5">
+                    <i class="fas fa-shield-alt mr-2 text-blue-400"></i>Acceso administrador
+                </h2>
+                <div id="adminLoginMsg" class="hidden mb-4 p-3 rounded-lg text-sm font-medium border"></div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Clave de administrador</label>
+                    <input type="password" id="adminKey" 
+                        class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                        placeholder="Ingresá la clave">
+                </div>
+                <button onclick="loginAdmin()"
+                    class="w-full py-3 rounded-lg font-bold text-white text-sm"
+                    style="background-color:#014189;">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Ingresar
+                </button>
+            </div>
+
+            <!-- PANEL ADMIN -->
+            <div id="panelAdmin" class="hidden">
+                
+                <!-- TABS -->
+                <div class="flex gap-3 mb-6">
+                    <button onclick="mostrarTab('pendientes')" id="tabPendientes"
+                        class="px-4 py-2 rounded-lg font-bold text-sm tab-btn activo"
+                        style="background-color:#014189; color:white;">
+                        <i class="fas fa-clock mr-2"></i>Pendientes
+                        <span id="contPendientes" class="ml-2 bg-yellow-400 text-yellow-900 text-xs px-2 py-0.5 rounded-full"></span>
+                    </button>
+                    <button onclick="mostrarTab('aprobados')" id="tabAprobados"
+                        class="px-4 py-2 rounded-lg font-bold text-sm tab-btn"
+                        style="background-color:#e5e7eb; color:#374151;">
+                        <i class="fas fa-check-circle mr-2"></i>Aprobados
+                    </button>
+                </div>
+
+                <!-- PENDIENTES -->
+                <div id="seccionPendientes">
+                    <div id="loadingPendientes" class="text-center py-8 text-gray-400">
+                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                        <p class="text-sm">Cargando solicitudes...</p>
+                    </div>
+                    <div id="listaPendientes" class="space-y-4"></div>
+                    <div id="sinPendientes" class="hidden text-center py-8 text-gray-400">
+                        <i class="fas fa-check-circle text-3xl mb-2 text-green-400"></i>
+                        <p class="text-sm">No hay solicitudes pendientes.</p>
+                    </div>
+                </div>
+
+                <!-- APROBADOS -->
+                <div id="seccionAprobados" class="hidden">
+                    <div id="loadingAprobados" class="text-center py-8 text-gray-400">
+                        <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                        <p class="text-sm">Cargando...</p>
+                    </div>
+                    <div id="listaAprobados" class="space-y-3"></div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- MODAL APROBAR -->
+    <div id="modalAprobar" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full shadow-xl">
+            <h3 class="text-lg font-bold text-blue-900 mb-4">Aprobar solicitud</h3>
+            <p class="text-sm text-gray-600 mb-4">Seleccioná el rol para <strong id="modalNombre"></strong>:</p>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Rol</label>
+                <select id="modalRol" class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    <option value="profesional">Profesional</option>
+                    <option value="preventivista">Preventivista</option>
+                    <option value="lectura">Solo lectura</option>
+                    <option value="editor">Editor</option>
+                    <option value="admin">Administrador</option>
+                </select>
+            </div>
+
+            <div id="modalMsg" class="hidden mb-4 p-3 rounded-lg text-sm font-medium border"></div>
+
+            <div class="flex justify-end gap-2">
+                <button onclick="cerrarModal()" class="px-4 py-2 text-gray-500 hover:text-gray-700 text-sm">Cancelar</button>
+                <button onclick="confirmarAprobacion()" id="btnConfirmar"
+                    class="px-6 py-2 rounded-lg font-bold text-white text-sm"
+                    style="background-color:#014189;">
+                    <i class="fas fa-check mr-2"></i>Aprobar y enviar credenciales
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center text-sm text-gray-500 py-4">
+        <p>&copy; 2025 IAPOS. Programa Día Preventivo de la Salud.</p>
+    </footer>
+
+    <script>
+        let adminKey = '';
+        let dniAprobar = '';
+
+        // ── LOGIN ADMIN ──
+        async function loginAdmin() {
+            const key = document.getElementById('adminKey').value.trim();
+            const msg = document.getElementById('adminLoginMsg');
+
+            if (!key) return;
+
+            // Verificar la clave consultando solicitudes
+            const res = await fetch('/solicitudes-pendientes', {
+                headers: { 'x-admin-key': key }
+            });
+
+            if (res.status === 403) {
+                msg.classList.remove('hidden');
+                msg.className = 'mb-4 p-3 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
+                msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Clave incorrecta.';
+                return;
+            }
+
+            adminKey = key;
+            document.getElementById('panelLoginAdmin').classList.add('hidden');
+            document.getElementById('panelAdmin').classList.remove('hidden');
+            cargarPendientes();
+        }
+
+        // ── CARGAR PENDIENTES ──
+        async function cargarPendientes() {
+            const res = await fetch('/solicitudes-pendientes', {
+                headers: { 'x-admin-key': adminKey }
+            });
+            const data = await res.json();
+            
+            document.getElementById('loadingPendientes').classList.add('hidden');
+            const lista = document.getElementById('listaPendientes');
+            const sinPend = document.getElementById('sinPendientes');
+            const cont = document.getElementById('contPendientes');
+
+            if (!data.solicitudes || data.solicitudes.length === 0) {
+                sinPend.classList.remove('hidden');
+                cont.textContent = '0';
+                return;
+            }
+
+            cont.textContent = data.solicitudes.length;
+            lista.innerHTML = '';
+
+            data.solicitudes.forEach(s => {
+                const fecha = new Date(s.fecha_solicitud).toLocaleDateString('es-AR');
+                lista.innerHTML += `
+                    <div class="bg-white rounded-xl shadow p-5 border border-gray-100">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <p class="font-bold text-blue-900 text-base">${s.apellido}, ${s.nombre}</p>
+                                <p class="text-sm text-gray-500">${s.profesion} · DNI ${s.dni}</p>
+                                <p class="text-sm text-gray-500">${s.email} · ${s.telefono || '-'}</p>
+                                <p class="text-sm text-gray-400 mt-1">Mat: ${s.matricula || 'No aplica'} · ${s.universidad || '-'}</p>
+                                <p class="text-xs text-gray-400 mt-1">Solicitud: ${fecha}</p>
+                            </div>
+                            <div class="flex flex-col gap-2 ml-4">
+                                <button onclick="abrirModal('${s.dni}', '${s.nombre} ${s.apellido}')"
+                                    class="px-4 py-2 rounded-lg font-bold text-white text-sm"
+                                    style="background-color:#014189;">
+                                    <i class="fas fa-check mr-1"></i>Aprobar
+                                </button>
+                                <button onclick="rechazar('${s.dni}')"
+                                    class="px-4 py-2 rounded-lg font-bold text-sm border border-red-300 text-red-600 hover:bg-red-50">
+                                    <i class="fas fa-times mr-1"></i>Rechazar
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+        }
+
+        async function cargarAprobados() {
+    const res = await fetch('/usuarios-aprobados', {
+        headers: { 'x-admin-key': adminKey }
+    });
+    const data = await res.json();
+    
+    document.getElementById('loadingAprobados').classList.add('hidden');
+    const lista = document.getElementById('listaAprobados');
+    lista.innerHTML = '';
+
+    (data.profesionales || []).forEach(p => {
+        const fecha = p.fecha_alta ? new Date(p.fecha_alta).toLocaleDateString('es-AR') : '-';
+        lista.innerHTML += `
+            <div class="bg-white rounded-xl shadow p-4 border border-gray-100 flex justify-between items-center">
+                <div>
+                    <p class="font-bold text-blue-900">${p.apellido}, ${p.nombre}</p>
+                    <p class="text-sm text-gray-500">${p.profesion} · ${p.usuario} · Rol: ${p.rol}</p>
+                    <p class="text-xs text-gray-400">Alta: ${fecha}</p>
+                </div>
+                <div class="flex gap-2 items-center">
+                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">Activo</span>
+                    <button onclick="desactivar('${p.dni}')"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold border border-yellow-400 text-yellow-700 hover:bg-yellow-50">
+                        <i class="fas fa-ban mr-1"></i>Desactivar
+                    </button>
+                    <button onclick="eliminar('${p.dni}')"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-300 text-red-600 hover:bg-red-50">
+                        <i class="fas fa-trash mr-1"></i>Eliminar
+                    </button>
+                </div>
+            </div>`;
+    });
+}
+        // ── MODAL APROBAR ──
+        function abrirModal(dni, nombre) {
+            dniAprobar = dni;
+            document.getElementById('modalNombre').textContent = nombre;
+            document.getElementById('modalMsg').classList.add('hidden');
+            document.getElementById('modalAprobar').classList.remove('hidden');
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalAprobar').classList.add('hidden');
+        }
+
+        async function confirmarAprobacion() {
+            const rol = document.getElementById('modalRol').value;
+            const btn = document.getElementById('btnConfirmar');
+            const msg = document.getElementById('modalMsg');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+
+            const res = await fetch('/aprobar-usuario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                body: JSON.stringify({ dni: dniAprobar, rol })
+            });
+            const data = await res.json();
+
+            if (data.success) {
+                msg.classList.remove('hidden');
+                msg.className = 'mb-4 p-3 rounded-lg text-sm font-medium border bg-green-50 text-green-700 border-green-200';
+                msg.innerHTML = `<i class="fas fa-check-circle mr-2"></i>Aprobado. Usuario: <strong>${data.usuario}</strong> · Credenciales enviadas por email.`;
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Listo';
+                setTimeout(() => {
+                    cerrarModal();
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check mr-2"></i>Aprobar y enviar credenciales';
+                    cargarPendientes();
+                }, 2000);
+            } else {
+                msg.classList.remove('hidden');
+                msg.className = 'mb-4 p-3 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
+                msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>' + data.message;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Aprobar y enviar credenciales';
+            }
+        }
+
+        async function rechazar(dni) {
+            if (!confirm('¿Seguro que querés rechazar esta solicitud?')) return;
+            await fetch('/rechazar-usuario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+                body: JSON.stringify({ dni })
+            });
+            cargarPendientes();
+        }
+
+        // ── TABS ──
+        function mostrarTab(tab) {
+            document.getElementById('seccionPendientes').classList.toggle('hidden', tab !== 'pendientes');
+            document.getElementById('seccionAprobados').classList.toggle('hidden', tab !== 'aprobados');
+            
+            document.getElementById('tabPendientes').style.backgroundColor = tab === 'pendientes' ? '#014189' : '#e5e7eb';
+            document.getElementById('tabPendientes').style.color = tab === 'pendientes' ? 'white' : '#374151';
+            document.getElementById('tabAprobados').style.backgroundColor = tab === 'aprobados' ? '#014189' : '#e5e7eb';
+            document.getElementById('tabAprobados').style.color = tab === 'aprobados' ? 'white' : '#374151';
+
+            if (tab === 'aprobados') cargarAprobados();
+        }
+
+        async function desactivar(dni) {
+    if (!confirm('¿Desactivar este usuario? Podrás reactivarlo después.')) return;
+    await fetch('/desactivar-usuario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({ dni })
+    });
+    cargarAprobados();
+}
+
+        async function eliminar(dni) {
+    if (!confirm('¿Eliminar este usuario definitivamente? Esta acción no se puede deshacer.')) return;
+    await fetch('/rechazar-usuario', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': adminKey },
+        body: JSON.stringify({ dni })
+    });
+    cargarAprobados();
+}
+
+        // Enter para login
+        document.getElementById('adminKey').addEventListener('keydown', e => {
+            if (e.key === 'Enter') loginAdmin();
+        });
+    </script>
+</body>
+</html>

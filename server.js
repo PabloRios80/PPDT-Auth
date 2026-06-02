@@ -244,4 +244,49 @@ app.get('/solicitudes-pendientes', async (req, res) => {
     }
 });
 
+// ── LISTAR APROBADOS ──
+app.get('/usuarios-aprobados', async (req, res) => {
+    try {
+        const adminKey = req.headers['x-admin-key'];
+        if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ success: false });
+
+        const { data } = await supabase
+            .from('profesionales')
+            .select('dni, nombre, apellido, profesion, usuario, rol, fecha_alta')
+            .eq('activo', true)
+            .order('fecha_alta', { ascending: false });
+
+        res.json({ success: true, profesionales: data || [] });
+    } catch (error) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// ── RECHAZAR USUARIO ──
+app.post('/rechazar-usuario', async (req, res) => {
+    try {
+        const adminKey = req.headers['x-admin-key'];
+        if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ success: false });
+
+        await supabase.from('profesionales').delete().eq('dni', req.body.dni);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false });
+    }
+});
+
+app.post('/desactivar-usuario', async (req, res) => {
+    try {
+        const adminKey = req.headers['x-admin-key'];
+        if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ success: false });
+
+        await supabase.from('profesionales')
+            .update({ activo: false })
+            .eq('dni', req.body.dni);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false });
+    }
+});
+
 app.listen(PORT, () => console.log(`PPDT-Auth corriendo en http://localhost:${PORT}`));
