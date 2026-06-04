@@ -105,13 +105,16 @@
     </footer>
 
     <script>
+        const params = new URLSearchParams(window.location.search);
+        const redirect = params.get('redirect');
+
         const REDIRECCION_POR_ROL = {
-            'medico':        'https://lavedad-8rs6.onrender.com',
-            'enfermera':     'https://ppdt-enfermeria.onrender.com/formulario-enfermeria.html',
+            'medico':        'https://cierre.diapreventivoiapos.com',
+            'enfermera':     'https://enfermeria.diapreventivoiapos.com/formulario-enfermeria.html',
             'bioquimico':    'https://ppdt-prestadores.onrender.com/prestadores.html',
             'odontologo':    'https://formulario-odontologia.onrender.com',
-            'preventivista': 'https://lavedad-8rs6.onrender.com',
-            'admin':         'https://lavedad-8rs6.onrender.com'
+            'preventivista': 'https://cierre.diapreventivoiapos.com',
+            'admin':         'https://cierre.diapreventivoiapos.com'
         };
 
         let usuarioActual = '';
