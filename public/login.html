@@ -110,6 +110,7 @@
 
         const REDIRECCION_POR_ROL = {
             'medico':        'https://cierre.diapreventivoiapos.com',
+            'medico_pediatra':  'http://localhost:3000/cierre_pediatria.html',
             'enfermera':     'https://enfermeria.diapreventivoiapos.com/formulario-enfermeria.html',
             'bioquimico':    'https://ppdt-prestadores.onrender.com/prestadores.html',
             'odontologo':    'https://formulario-odontologia.onrender.com',
@@ -160,7 +161,8 @@
                     // Redirigir según rol/profesion
                     const prof = data.profesional;
                     const url = REDIRECCION_POR_ROL[prof.profesion] || REDIRECCION_POR_ROL[prof.rol] || '/';
-                    window.location.href = url;
+                    alert('profesion: ' + prof.profesion + ' | rol: ' + prof.rol + ' | url: ' + url);
+                    window.location.href = url + '?token=' + data.token;
                 }
 
             } catch(e) {
@@ -209,9 +211,9 @@
                 }
 
                 mostrarMsg(msg, true, 'Contraseña cambiada. Redirigiendo...');
-                const prof = JSON.parse(localStorage.getItem('dpProfesional') || '{}');
-                const url = REDIRECCION_POR_ROL[prof.profesion] || '/';
-                setTimeout(() => { window.location.href = url; }, 1500);
+                const prof = JSON.parse(localStorage.getItem('dpProfesional') || '{}'); 
+                const url = REDIRECCION_POR_ROL[prof.profesion] || REDIRECCION_POR_ROL[prof.rol] || '/';
+                setTimeout(() => { window.location.href = url + '?token=' + localStorage.getItem('dpToken'); }, 1500);
 
             } catch(e) {
                 mostrarMsg(msg, false, 'Error de conexión.');
