@@ -1,239 +1,443 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Solicitar Acceso — Día Preventivo IAPOS</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
-        body { font-family: 'Montserrat', sans-serif; }
+      body {
+        font-family: "Montserrat", sans-serif;
+      }
     </style>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-
+  </head>
+  <body class="bg-gray-100 min-h-screen flex flex-col">
     <!-- HEADER -->
-    <header style="background-color:#014189; padding:0; margin:0;">
-        <div style="background-color:#014189; padding:12px 20px; display:flex; align-items:center; gap:16px; max-width:1080px; margin:0 auto;">
-            <img src="images/logo_iapos.png" alt="Logo IAPOS" style="height:50px; display:block;">
-            <div>
-                <div style="font-family:'Montserrat',sans-serif; font-size:16px; font-weight:700; color:#fff;">
-                    Solicitar Acceso — Día Preventivo
-                </div>
-                <div style="font-family:'Montserrat',sans-serif; font-size:11px; color:#00A8E7; font-weight:600; text-transform:uppercase; letter-spacing:0.1em;">
-                    Instituto Autárquico Provincial de Obra Social
-                </div>
-            </div>
+    <header style="background-color: #014189; padding: 0; margin: 0">
+      <div
+        style="
+          background-color: #014189;
+          padding: 12px 20px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          max-width: 1080px;
+          margin: 0 auto;
+        "
+      >
+        <img
+          src="images/logo_iapos.png"
+          alt="Logo IAPOS"
+          style="height: 50px; display: block"
+        />
+        <div>
+          <div
+            style="
+              font-family: &quot;Montserrat&quot;, sans-serif;
+              font-size: 16px;
+              font-weight: 700;
+              color: #fff;
+            "
+          >
+            Solicitar Acceso — Día Preventivo
+          </div>
+          <div
+            style="
+              font-family: &quot;Montserrat&quot;, sans-serif;
+              font-size: 11px;
+              color: #00a8e7;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.1em;
+            "
+          >
+            Instituto Autárquico Provincial de Obra Social
+          </div>
         </div>
-        <div style="background-color:#00A8E7; height:4px;"></div>
+      </div>
+      <div style="background-color: #00a8e7; height: 4px"></div>
     </header>
 
     <main class="flex-grow py-8">
-        <div style="max-width:680px; margin:0 auto; padding:0 16px;">
+      <div style="max-width: 680px; margin: 0 auto; padding: 0 16px">
+        <div class="bg-white rounded-xl shadow-lg p-8 border border-blue-100">
+          <h2 class="text-xl font-bold text-blue-900 mb-2">
+            Solicitud de acceso al sistema
+          </h2>
+          <p class="text-sm text-gray-500 mb-6">
+            Completá el formulario con tus datos profesionales. Una vez revisada
+            tu solicitud recibirás tus credenciales por email.
+          </p>
 
-            <div class="bg-white rounded-xl shadow-lg p-8 border border-blue-100">
-                <h2 class="text-xl font-bold text-blue-900 mb-2">Solicitud de acceso al sistema</h2>
-                <p class="text-sm text-gray-500 mb-6">Completá el formulario con tus datos profesionales. Una vez revisada tu solicitud recibirás tus credenciales por email.</p>
+          <div
+            id="mensajeResultado"
+            class="hidden mb-6 p-4 rounded-lg text-sm font-medium"
+          ></div>
 
-                <div id="mensajeResultado" class="hidden mb-6 p-4 rounded-lg text-sm font-medium"></div>
-
-                <form id="formSolicitud" class="space-y-5">
-
-                    <!-- Datos personales -->
-                    <div class="border-b border-gray-100 pb-4">
-                        <h3 class="text-sm font-bold text-blue-700 uppercase tracking-wide mb-4">
-                            <i class="fas fa-user mr-2"></i>Datos personales
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">DNI <span class="text-red-500">*</span></label>
-                                <input type="text" id="dni" maxlength="8"
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Sin puntos ni espacios">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de nacimiento <span class="text-red-500">*</span></label>
-                                <input type="date" id="fecha_nacimiento"
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Apellido <span class="text-red-500">*</span></label>
-                                <input type="text" id="apellido"
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Apellido">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Nombre <span class="text-red-500">*</span></label>
-                                <input type="text" id="nombre"
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Nombre/s">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono <span class="text-red-500">*</span></label>
-                                <input type="tel" id="telefono"
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Ej: 3424567890">
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Email <span class="text-red-500">*</span></label>
-                                <input type="email" id="email"
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="correo@ejemplo.com">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Datos profesionales -->
-                    <div class="border-b border-gray-100 pb-4">
-                        <h3 class="text-sm font-bold text-blue-700 uppercase tracking-wide mb-4">
-                            <i class="fas fa-stethoscope mr-2"></i>Datos profesionales
-                        </h3>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Profesión <span class="text-red-500">*</span></label>
-                                <select id="profesion"
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                                    <option value="">Seleccioná tu profesión</option>
-                                    <option value="medico">Médico/a — Adultos</option>
-                                    <option value="enfermera">Enfermero/a</option>
-                                    <option value="bioquimico">Bioquímico/a</option>
-                                    <option value="odontologo">Odontólogo/a</option>
-                                    <option value="preventivista">Preventivista (administrativo)</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Matrícula profesional <span id="matriculaReq" class="text-red-500">*</span><span id="matriculaOpc" class="text-gray-400 font-normal hidden"> (opcional)</span></label>
-                                <input type="text" id="matricula"
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Nº de matrícula">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Universidad que otorga el título</label>
-                                <input type="text" id="universidad"
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                                    placeholder="Nombre de la universidad">
-                            </div>
-                            <div class="md:col-span-2">
-                                <label class="block text-sm font-medium text-gray-700 mb-1">Prestador al que pertenece <span class="text-red-500">*</span></label>
-                                <select id="prestador_id"
-                                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                                    <option value="">Seleccioná el prestador</option>
-                                    <option value="1">IAPOS — Santa Fe</option>
-                                    <option value="2">IAPOS — Rosario</option>
-                                    <option value="3">IAPOS — Coronda</option>
-                                    <option value="4">ATEM</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Observaciones -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Observaciones <span class="text-gray-400 font-normal">(opcional)</span></label>
-                        <textarea id="observaciones" rows="2"
-                            class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
-                            placeholder="Información adicional relevante"></textarea>
-                    </div>
-
-                    <button type="submit" id="btnEnviar"
-                        class="w-full py-3 rounded-lg font-bold text-white text-sm transition"
-                        style="background-color:#014189;">
-                        <i class="fas fa-paper-plane mr-2"></i>Enviar solicitud
-                    </button>
-
-                </form>
-
-                <p class="text-xs text-center text-gray-400 mt-4">
-                    ¿Ya tenés acceso? <a href="login.html" class="text-blue-600 font-medium hover:underline">Ingresá aquí</a>
-                </p>
+          <form id="formSolicitud" class="space-y-5">
+            <!-- Datos personales -->
+            <div class="border-b border-gray-100 pb-4">
+              <h3
+                class="text-sm font-bold text-blue-700 uppercase tracking-wide mb-4"
+              >
+                <i class="fas fa-user mr-2"></i>Datos personales
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >DNI <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="dni"
+                    maxlength="8"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Sin puntos ni espacios"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Fecha de nacimiento
+                    <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="date"
+                    id="fecha_nacimiento"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Apellido <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="apellido"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Apellido"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Nombre <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="nombre"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Nombre/s"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Teléfono <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="tel"
+                    id="telefono"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Ej: 3424567890"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Email <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="email"
+                    id="email"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="correo@ejemplo.com"
+                  />
+                </div>
+              </div>
             </div>
+
+            <!-- Datos profesionales -->
+            <div class="border-b border-gray-100 pb-4">
+              <h3
+                class="text-sm font-bold text-blue-700 uppercase tracking-wide mb-4"
+              >
+                <i class="fas fa-stethoscope mr-2"></i>Datos profesionales
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Profesión <span class="text-red-500">*</span></label
+                  >
+                  <select
+                    id="profesion"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="">Seleccioná tu profesión</option>
+                    <option value="medico">Médico/a — Adultos</option>
+                    <option value="enfermera">Enfermero/a</option>
+                    <option value="bioquimico">Bioquímico/a</option>
+                    <option value="odontologo">Odontólogo/a</option>
+                    <option value="preventivista">
+                      Preventivista (administrativo)
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Matrícula profesional
+                    <span id="matriculaReq" class="text-red-500">*</span
+                    ><span
+                      id="matriculaOpc"
+                      class="text-gray-400 font-normal hidden"
+                    >
+                      (opcional)</span
+                    ></label
+                  >
+                  <input
+                    type="text"
+                    id="matricula"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Nº de matrícula"
+                  />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Universidad que otorga el título</label
+                  >
+                  <input
+                    type="text"
+                    id="universidad"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Nombre de la universidad"
+                  />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Prestador al que pertenece
+                    <span class="text-red-500">*</span></label
+                  >
+                  <select
+                    id="prestador_id"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="">Seleccioná el prestador</option>
+                    <option value="1">IAPOS — Santa Fe</option>
+                    <option value="2">IAPOS — Rosario</option>
+                    <option value="3">IAPOS — Coronda</option>
+                    <option value="4">ATEM</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Observaciones -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1"
+                >Observaciones
+                <span class="text-gray-400 font-normal">(opcional)</span></label
+              >
+              <textarea
+                id="observaciones"
+                rows="2"
+                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+                placeholder="Información adicional relevante"
+              ></textarea>
+            </div>
+
+            <button
+              type="submit"
+              id="btnEnviar"
+              class="w-full py-3 rounded-lg font-bold text-white text-sm transition"
+              style="background-color: #014189"
+            >
+              <i class="fas fa-paper-plane mr-2"></i>Enviar solicitud
+            </button>
+          </form>
+
+          <p class="text-xs text-center text-gray-400 mt-4">
+            ¿Ya tenés acceso?
+            <a
+              href="login.html"
+              class="text-blue-600 font-medium hover:underline"
+              >Ingresá aquí</a
+            >
+          </p>
         </div>
+      </div>
     </main>
 
     <footer class="text-center text-sm text-gray-500 py-4">
-        <p>&copy; 2025 IAPOS. Programa Día Preventivo de la Salud.</p>
+      <p>&copy; 2025 IAPOS. Programa Día Preventivo de la Salud.</p>
     </footer>
 
     <script>
-    // ── CAMBIO DINÁMICO MATRÍCULA ──
-    document.getElementById('profesion').addEventListener('change', function() {
-        const sinMatricula = ['enfermera', 'preventivista'];
-        const req = document.getElementById('matriculaReq');
-        const opc = document.getElementById('matriculaOpc');
-        if (sinMatricula.includes(this.value)) {
-            req.classList.add('hidden');
-            opc.classList.remove('hidden');
-        } else {
-            req.classList.remove('hidden');
-            opc.classList.add('hidden');
-        }
-    });
+      // ── CAMBIO DINÁMICO MATRÍCULA ──
+      document
+        .getElementById("profesion")
+        .addEventListener("change", function () {
+          const sinMatricula = ["enfermera", "preventivista"];
+          const req = document.getElementById("matriculaReq");
+          const opc = document.getElementById("matriculaOpc");
+          if (sinMatricula.includes(this.value)) {
+            req.classList.add("hidden");
+            opc.classList.remove("hidden");
+          } else {
+            req.classList.remove("hidden");
+            opc.classList.add("hidden");
+          }
+        });
 
-    // ── ENVÍO DEL FORMULARIO ──
-    document.getElementById('formSolicitud').addEventListener('submit', async function(e) {
-        e.preventDefault();
+      // ── ENVÍO DEL FORMULARIO ──
+      document
+        .getElementById("formSolicitud")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
 
-        const btn = document.getElementById('btnEnviar');
-        const msg = document.getElementById('mensajeResultado');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...';
+          const btn = document.getElementById("btnEnviar");
+          const msg = document.getElementById("mensajeResultado");
+          btn.disabled = true;
+          btn.innerHTML =
+            '<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...';
 
-        const data = {
-            dni:              document.getElementById('dni').value.trim(),
-            apellido:         document.getElementById('apellido').value.trim(),
-            nombre:           document.getElementById('nombre').value.trim(),
-            fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
-            profesion:        document.getElementById('profesion').value,
-            universidad:      document.getElementById('universidad').value.trim(),
-            matricula:        document.getElementById('matricula').value.trim(),
-            telefono:         document.getElementById('telefono').value.trim(),
-            email:            document.getElementById('email').value.trim(),
-            prestador_id:     document.getElementById('prestador_id').value || null,
-            observaciones:    document.getElementById('observaciones').value.trim()
-        };
+          const data = {
+            dni: document.getElementById("dni").value.trim(),
+            apellido: document.getElementById("apellido").value.trim(),
+            nombre: document.getElementById("nombre").value.trim(),
+            fecha_nacimiento: document.getElementById("fecha_nacimiento").value,
+            profesion: document.getElementById("profesion").value,
+            universidad: document.getElementById("universidad").value.trim(),
+            matricula: document.getElementById("matricula").value.trim(),
+            telefono: document.getElementById("telefono").value.trim(),
+            email: document.getElementById("email").value.trim(),
+            prestador_id: document.getElementById("prestador_id").value || null,
+            observaciones: document
+              .getElementById("observaciones")
+              .value.trim(),
+          };
+          // Validación frontend
+          const sinMatricula = ["enfermera", "preventivista"];
+          const errores = [];
 
-        // Validación frontend
-        const sinMatricula = ['enfermera', 'preventivista'];
-        if (!data.dni || !data.apellido || !data.nombre || !data.profesion || !data.email ||
-            (!data.matricula && !sinMatricula.includes(data.profesion))) {
-            msg.classList.remove('hidden');
-            msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
-            msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Completá todos los campos obligatorios.';
+          // DNI
+          if (!/^\d{7,8}$/.test(data.dni))
+            errores.push("DNI inválido — debe tener 7 u 8 dígitos.");
+
+          // Fecha nacimiento
+          if (!data.fecha_nacimiento) {
+            errores.push("Fecha de nacimiento requerida.");
+          } else {
+            const hoy = new Date();
+            const nac = new Date(data.fecha_nacimiento);
+            const edad = (hoy - nac) / (1000 * 60 * 60 * 24 * 365.25);
+            if (nac.getFullYear() < 1920)
+              errores.push("Fecha de nacimiento inválida.");
+            else if (edad < 18)
+              errores.push("Debés ser mayor de 18 años para registrarte.");
+            else if (nac > hoy)
+              errores.push("La fecha de nacimiento no puede ser futura.");
+          }
+
+          // Nombre y apellido
+          if (!data.apellido || data.apellido.length < 2)
+            errores.push("Apellido inválido.");
+          if (!data.nombre || data.nombre.length < 2)
+            errores.push("Nombre inválido.");
+
+          // Teléfono
+          if (!/^\d{8,15}$/.test(data.telefono.replace(/[\s\-]/g, "")))
+            errores.push("Teléfono inválido — mínimo 8 dígitos numéricos.");
+
+          // Email
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
+            errores.push("Email inválido.");
+
+          // Profesión y matrícula
+          if (!data.profesion) errores.push("Seleccioná una profesión.");
+          if (!data.matricula && !sinMatricula.includes(data.profesion))
+            errores.push("Matrícula requerida para tu profesión.");
+
+          // Prestador
+          if (!data.prestador_id)
+            errores.push("Seleccioná el prestador al que pertenecés.");
+
+          if (errores.length > 0) {
+            msg.classList.remove("hidden");
+            msg.className =
+              "mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200";
+            msg.innerHTML =
+              '<i class="fas fa-times-circle mr-2"></i><strong>Corregí los siguientes errores:</strong><ul class="mt-2 list-disc list-inside">' +
+              errores.map((e) => `<li>${e}</li>`).join("") +
+              "</ul>";
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+            btn.innerHTML =
+              '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
             return;
-        }
+          }
 
-        try {
-            const res = await fetch('/solicitar-acceso', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+          try {
+            const res = await fetch("/solicitar-acceso", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
             });
             const result = await res.json();
 
-            msg.classList.remove('hidden');
+            msg.classList.remove("hidden");
             if (result.success) {
-                msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-green-50 text-green-700 border-green-200';
-                msg.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + result.message;
-                document.getElementById('formSolicitud').reset();
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+              msg.className =
+                "mb-6 p-4 rounded-lg text-sm font-medium border bg-green-50 text-green-700 border-green-200";
+              msg.innerHTML =
+                '<i class="fas fa-check-circle mr-2"></i>' + result.message;
+              document.getElementById("formSolicitud").reset();
+              btn.disabled = false;
+              btn.innerHTML =
+                '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
             } else {
-                msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
-                msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>' + result.message;
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+              msg.className =
+                "mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200";
+              msg.innerHTML =
+                '<i class="fas fa-times-circle mr-2"></i>' + result.message;
+              btn.disabled = false;
+              btn.innerHTML =
+                '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
             }
-        } catch(err) {
-            msg.classList.remove('hidden');
-            msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
-            msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Error de conexión. Intentá de nuevo.';
+          } catch (err) {
+            msg.classList.remove("hidden");
+            msg.className =
+              "mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200";
+            msg.innerHTML =
+              '<i class="fas fa-times-circle mr-2"></i>Error de conexión. Intentá de nuevo.';
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+            btn.innerHTML =
+              '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+          }
+        });
+      document.getElementById("dni").addEventListener("blur", function () {
+        const val = this.value.trim();
+        if (val && !/^\d{7,8}$/.test(val)) {
+          this.style.borderColor = "#dc2626";
+          this.title = "DNI inválido";
+        } else {
+          this.style.borderColor = "";
         }
-    });
-</script>
-</body>
+      });
+
+      document.getElementById("telefono").addEventListener("blur", function () {
+        const val = this.value.trim().replace(/[\s\-]/g, "");
+        if (val && !/^\d{8,15}$/.test(val)) {
+          this.style.borderColor = "#dc2626";
+        } else {
+          this.style.borderColor = "";
+        }
+      });
+    </script>
+  </body>
 </html>
