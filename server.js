@@ -167,7 +167,6 @@ app.get('/verificar-token', (req, res) => {
         res.json({ valido: false });
     }
 });
-
 // ── APROBAR USUARIO (solo superadmin) ──
 app.post('/aprobar-usuario', async (req, res) => {
     try {
@@ -178,7 +177,6 @@ app.post('/aprobar-usuario', async (req, res) => {
             return res.status(403).json({ success: false, message: 'No autorizado.' });
         }
 
-        // Generar usuario y contraseña temporal
         const { data: prof } = await supabase
             .from('profesionales')
             .select('nombre, apellido, email')
@@ -207,23 +205,13 @@ app.post('/aprobar-usuario', async (req, res) => {
             .eq('dni', dni);
 
         console.log(`✅ Usuario aprobado: ${usuario} / ${passwordTemporal}`);
-        // Enviar email con credenciales
-        axios.post(process.env.EMAIL_SCRIPT_URL, {
-            nombre: prof.nombre,
-            apellido: prof.apellido,
-            email: prof.email,
-            usuario,
-            passwordTemporal
-        }).then(() => console.log('✅ Email enviado a:', prof.email))
-        .catch(e => console.warn('Email falló:', e.message));
-            res.json({ success: true, usuario, passwordTemporal, message: `Usuario creado: ${usuario}` });
+        res.json({ success: true, usuario, passwordTemporal, message: `Usuario creado: ${usuario}` });
 
-        } catch (error) {
-            console.error('Error en /aprobar-usuario:', error.message);
-            res.status(500).json({ success: false, message: 'Error de conexión.' });
-        }
-    });
-
+    } catch (error) {
+        console.error('Error en /aprobar-usuario:', error.message);
+        res.status(500).json({ success: false, message: 'Error de conexión.' });
+    }
+});
 // ── LISTAR SOLICITUDES PENDIENTES ──
 app.get('/solicitudes-pendientes', async (req, res) => {
     try {

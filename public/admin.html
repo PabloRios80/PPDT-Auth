@@ -286,8 +286,9 @@
                         <i class="fab fa-whatsapp mr-1"></i>Enviar por WhatsApp
                     </a>
                 </div>`;
-            btn.innerHTML = '<i class="fas fa-check mr-2"></i>Listo';
-            btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Listo';
+                btn.disabled = false;
+                btn.onclick = cerrarModal;
             } else {
                 msg.classList.remove('hidden');
                 msg.className = 'mb-4 p-3 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
