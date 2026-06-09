@@ -248,6 +248,7 @@
 
         function cerrarModal() {
             document.getElementById('modalAprobar').classList.add('hidden');
+            cargarPendientes();
         }
 
         async function confirmarAprobacion() {
@@ -266,16 +267,27 @@
             const data = await res.json();
 
             if (data.success) {
+                const textoCredenciales = `Acceso Día Preventivo IAPOS\nUsuario: ${data.usuario}\nContraseña temporal: ${data.passwordTemporal}\nIngresá en: https://acceso.diapreventivoiapos.com\nDeberás cambiar la contraseña al primer ingreso.`;
                 msg.classList.remove('hidden');
                 msg.className = 'mb-4 p-3 rounded-lg text-sm font-medium border bg-green-50 text-green-700 border-green-200';
-                msg.innerHTML = `<i class="fas fa-check-circle mr-2"></i>Aprobado. Usuario: <strong>${data.usuario}</strong> · Credenciales enviadas por email.`;
-                btn.innerHTML = '<i class="fas fa-check mr-2"></i>Listo';
-                setTimeout(() => {
-                    cerrarModal();
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-check mr-2"></i>Aprobar y enviar credenciales';
-                    cargarPendientes();
-                }, 2000);
+                msg.innerHTML = `
+                    <p class="font-bold mb-2"><i class="fas fa-check-circle mr-2"></i>Usuario aprobado correctamente</p>
+                    <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; margin:8px 0; font-family:monospace; font-size:13px; color:#166534;">
+                        <p>👤 Usuario: <strong>${data.usuario}</strong></p>
+                        <p>🔑 Contraseña temporal: <strong>${data.passwordTemporal}</strong></p>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+                    <button onclick="navigator.clipboard.writeText(\`${textoCredenciales}\`).then(()=>alert('Copiado al portapapeles'))"
+                        style="background:#014189; color:white; border:none; border-radius:6px; padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;">
+                        <i class="fas fa-copy mr-1"></i>Copiar
+                    </button>
+                    <a href="https://wa.me/?text=${encodeURIComponent(textoCredenciales)}" target="_blank"
+                        style="background:#25D366; color:white; border-radius:6px; padding:7px 14px; font-size:12px; font-weight:700; text-decoration:none; display:inline-block;">
+                        <i class="fab fa-whatsapp mr-1"></i>Enviar por WhatsApp
+                    </a>
+                </div>`;
+            btn.innerHTML = '<i class="fas fa-check mr-2"></i>Listo';
+            btn.disabled = false;
             } else {
                 msg.classList.remove('hidden');
                 msg.className = 'mb-4 p-3 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
