@@ -440,4 +440,34 @@ app.post('/rechazar-prestador', async (req, res) => {
     }
 });
 
+// ── LISTAR PRESTADORES APROBADOS ──
+app.get('/prestadores-aprobados', async (req, res) => {
+    try {
+        const adminKey = req.headers['x-admin-key'];
+        if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ success: false });
+
+        const { data } = await supabase
+            .from('prestadores_institucionales')
+            .select('id, nombre_institucion, especialidad, usuario, rol, fecha_alta')
+            .eq('activo', true)
+            .order('fecha_alta', { ascending: false });
+
+        res.json({ success: true, prestadores: data || [] });
+    } catch (error) {
+        res.status(500).json({ success: false });
+    }
+});
+
+app.post('/desactivar-prestador', async (req, res) => {
+    try {
+        const adminKey = req.headers['x-admin-key'];
+        if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ success: false });
+        await supabase.from('prestadores_institucionales')
+            .update({ activo: false }).eq('id', req.body.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false });
+    }
+});
+
 app.listen(PORT, () => console.log(`PPDT-Auth corriendo en http://localhost:${PORT}`));
