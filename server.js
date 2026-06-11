@@ -349,8 +349,9 @@ app.post('/aprobar-prestador', async (req, res) => {
         if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ success: false });
 
         const { id } = req.body;
-
+        console.log('Aprobando prestador id:', id);
         const { data: prest } = await supabase
+        console.log('Prestador encontrado:', prest)
             .from('prestadores_institucionales')
             .select('nombre_institucion, cuit, especialidad')
             .eq('id', id)
