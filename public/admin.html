@@ -364,6 +364,8 @@ async function aprobarPrestador(id, nombre) {
         div.querySelector('#btnListoPrest').addEventListener('click', () => {
             cargarPrestadores();
         });
+        // Recargar lista después de 5 segundos automáticamente
+        setTimeout(() => cargarPrestadores(), 5000);
     } else {
         alert('Error: ' + data.message);
         btn.disabled = false;
