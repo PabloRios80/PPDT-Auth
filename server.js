@@ -124,32 +124,50 @@ app.post('/login', async (req, res) => {
     try {
         const { usuario, password } = req.body;
 
-        const { data: profesional, error } = await supabase
+        // Buscar primero en profesionales
+        let profesional = null;
+        let esPrestador = false;
+
+        const { data: prof } = await supabase
             .from('profesionales')
             .select('*')
             .eq('usuario', usuario)
             .eq('activo', true)
             .single();
 
-        if (error || !profesional) {
+        if (prof) {
+            profesional = prof;
+        } else {
+            // Buscar en prestadores_institucionales
+            const { data: prest } = await supabase
+                .from('prestadores_institucionales')
+                .select('*')
+                .eq('usuario', usuario)
+                .eq('activo', true)
+                .single();
+
+            if (prest) {
+                profesional = prest;
+                esPrestador = true;
+            }
+        }
+
+        if (!profesional) {
             return res.json({ success: false, message: 'Usuario o contraseña incorrectos.' });
         }
 
-        // Verificar contraseña
         const passwordOk = await bcrypt.compare(password, profesional.password_hash);
-        console.log('Password ok:', passwordOk);
         if (!passwordOk) {
             return res.json({ success: false, message: 'Usuario o contraseña incorrectos.' });
         }
 
-        // Generar token JWT
         const token = jwt.sign({
             id: profesional.id,
             usuario: profesional.usuario,
-            nombre: profesional.nombre,
-            apellido: profesional.apellido,
+            nombre: esPrestador ? profesional.nombre_institucion : profesional.nombre,
+            apellido: esPrestador ? '' : profesional.apellido,
             rol: profesional.rol,
-            profesion: profesional.profesion
+            profesion: esPrestador ? profesional.especialidad : profesional.profesion
         }, JWT_SECRET, { expiresIn: '8h' });
 
         res.json({
@@ -157,10 +175,10 @@ app.post('/login', async (req, res) => {
             token,
             debe_cambiar_password: profesional.debe_cambiar_password,
             profesional: {
-                nombre: profesional.nombre,
-                apellido: profesional.apellido,
+                nombre: esPrestador ? profesional.nombre_institucion : profesional.nombre,
+                apellido: esPrestador ? '' : profesional.apellido,
                 rol: profesional.rol,
-                profesion: profesional.profesion
+                profesion: esPrestador ? profesional.especialidad : profesional.profesion
             }
         });
 
@@ -169,18 +187,36 @@ app.post('/login', async (req, res) => {
         res.status(500).json({ success: false, message: 'Error de conexión.' });
     }
 });
-
 // ── CAMBIAR CONTRASEÑA ──
 app.post('/cambiar-password', async (req, res) => {
     try {
         const { usuario, password_actual, password_nuevo } = req.body;
 
-        const { data: profesional } = await supabase
+        // Buscar en profesionales primero
+        let profesional = null;
+        let esPrestador = false;
+
+        const { data: prof } = await supabase
             .from('profesionales')
             .select('*')
             .eq('usuario', usuario)
             .eq('activo', true)
             .single();
+
+        if (prof) {
+            profesional = prof;
+        } else {
+            const { data: prest } = await supabase
+                .from('prestadores_institucionales')
+                .select('*')
+                .eq('usuario', usuario)
+                .eq('activo', true)
+                .single();
+            if (prest) {
+                profesional = prest;
+                esPrestador = true;
+            }
+        }
 
         if (!profesional) return res.json({ success: false, message: 'Usuario no encontrado.' });
 
@@ -188,8 +224,10 @@ app.post('/cambiar-password', async (req, res) => {
         if (!passwordOk) return res.json({ success: false, message: 'Contraseña actual incorrecta.' });
 
         const nuevoHash = await bcrypt.hash(password_nuevo, 10);
+
+        const tabla = esPrestador ? 'prestadores_institucionales' : 'profesionales';
         await supabase
-            .from('profesionales')
+            .from(tabla)
             .update({ password_hash: nuevoHash, debe_cambiar_password: false })
             .eq('usuario', usuario);
 
