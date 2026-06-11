@@ -163,33 +163,53 @@
                 </div>
               </div>
             </div>
-
             <!-- Datos profesionales -->
             <div class="border-b border-gray-100 pb-4">
               <h3
                 class="text-sm font-bold text-blue-700 uppercase tracking-wide mb-4"
               >
-                <i class="fas fa-stethoscope mr-2"></i>Datos profesionales
+                <i class="fas fa-stethoscope mr-2"></i>Tipo de acceso
               </h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div class="md:col-span-2">
                   <label class="block text-sm font-medium text-gray-700 mb-1"
-                    >Profesión <span class="text-red-500">*</span></label
+                    >Profesión / Tipo <span class="text-red-500">*</span></label
                   >
                   <select
                     id="profesion"
+                    onchange="toggleTipoSolicitud()"
                     class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   >
-                    <option value="">Seleccioná tu profesión</option>
-                    <option value="medico">Médico/a — Adultos</option>
-                    <option value="enfermera">Enfermero/a</option>
-                    <option value="bioquimico">Bioquímico/a</option>
-                    <option value="odontologo">Odontólogo/a</option>
-                    <option value="preventivista">
-                      Preventivista (administrativo)
-                    </option>
+                    <option value="">Seleccioná tu profesión o tipo</option>
+                    <optgroup label="── Profesionales de salud ──">
+                      <option value="medico">Médico/a — Adultos</option>
+                      <option value="enfermera">Enfermero/a</option>
+                      <option value="bioquimico">
+                        Bioquímico/a (profesional)
+                      </option>
+                      <option value="odontologo">Odontólogo/a</option>
+                      <option value="preventivista">
+                        Preventivista (administrativo)
+                      </option>
+                    </optgroup>
+                    <optgroup label="── Prestadores institucionales ──">
+                      <option value="imagenes">
+                        Centro de Diagnóstico por Imágenes
+                      </option>
+                      <option value="gastro">Gastroenterología</option>
+                      <option value="densitometria">Densitometría</option>
+                      <option value="biopsias">Biopsias</option>
+                      <option value="papanicolau">Papanicolau</option>
+                      <option value="oftalmologia">Oftalmología</option>
+                    </optgroup>
                   </select>
                 </div>
+              </div>
+            </div>
+
+            <!-- CAMPOS PROFESIONAL (existentes) -->
+            <div id="campoProfesional" class="border-b border-gray-100 pb-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1"
                     >Matrícula profesional
@@ -208,7 +228,7 @@
                     placeholder="Nº de matrícula"
                   />
                 </div>
-                <div class="md:col-span-2">
+                <div>
                   <label class="block text-sm font-medium text-gray-700 mb-1"
                     >Universidad que otorga el título</label
                   >
@@ -238,18 +258,161 @@
               </div>
             </div>
 
-            <!-- Observaciones -->
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1"
-                >Observaciones
-                <span class="text-gray-400 font-normal">(opcional)</span></label
+            <!-- CAMPOS PRESTADOR INSTITUCIONAL (nuevos) -->
+            <div
+              id="campoPrestadorInstitucional"
+              class="hidden border-b border-gray-100 pb-4"
+            >
+              <h3
+                class="text-sm font-bold text-blue-700 uppercase tracking-wide mb-4"
               >
-              <textarea
-                id="observaciones"
-                rows="2"
-                class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"
-                placeholder="Información adicional relevante"
-              ></textarea>
+                <i class="fas fa-building mr-2"></i>Datos de la institución
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Nombre de la institución
+                    <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="nombre_institucion"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Ej: Laboratorio Central SA"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >CUIT <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="cuit"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Ej: 30-12345678-9"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Teléfono <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="telefono_inst"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Ej: 3424567890"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Mail institucional
+                    <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="email"
+                    id="mail_inst"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="contacto@institucion.com"
+                  />
+                </div>
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Dirección <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="direccion"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Calle y número"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Localidad <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="localidad"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Ej: Santa Fe"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Provincia <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="provincia"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Ej: Santa Fe"
+                  />
+                </div>
+              </div>
+
+              <h3
+                class="text-sm font-bold text-blue-700 uppercase tracking-wide mb-4 mt-6"
+              >
+                <i class="fas fa-user-tie mr-2"></i>Profesional responsable
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="md:col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Nombre completo <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="nombre_responsable"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Nombre y apellido del director técnico"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >DNI <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="dni_responsable"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="DNI sin puntos"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Matrícula profesional
+                    <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="matricula_responsable"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Nº de matrícula"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Teléfono <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="text"
+                    id="telefono_responsable"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Teléfono del responsable"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1"
+                    >Mail <span class="text-red-500">*</span></label
+                  >
+                  <input
+                    type="email"
+                    id="mail_responsable"
+                    class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="mail@responsable.com"
+                  />
+                </div>
+              </div>
             </div>
 
             <button
@@ -278,166 +441,160 @@
       <p>&copy; 2025 IAPOS. Programa Día Preventivo de la Salud.</p>
     </footer>
 
-    <script>
-      // ── CAMBIO DINÁMICO MATRÍCULA ──
-      document
-        .getElementById("profesion")
-        .addEventListener("change", function () {
-          const sinMatricula = ["enfermera", "preventivista"];
-          const req = document.getElementById("matriculaReq");
-          const opc = document.getElementById("matriculaOpc");
-          if (sinMatricula.includes(this.value)) {
-            req.classList.add("hidden");
-            opc.classList.remove("hidden");
-          } else {
-            req.classList.remove("hidden");
-            opc.classList.add("hidden");
-          }
+  <script>
+    const PRESTADORES_INSTITUCIONALES = ['imagenes','gastro','densitometria','biopsias','papanicolau','oftalmologia'];
+
+    function toggleTipoSolicitud() {
+        const profesion = document.getElementById('profesion').value;
+        const esPrestador = PRESTADORES_INSTITUCIONALES.includes(profesion);
+        document.getElementById('campoProfesional').classList.toggle('hidden', esPrestador);
+        document.getElementById('campoPrestadorInstitucional').classList.toggle('hidden', !esPrestador);
+        const camposPersonales = ['fecha_nacimiento','apellido','nombre','telefono','email'];
+        camposPersonales.forEach(id => {
+            const campo = document.getElementById(id)?.closest('div');
+            if (campo) campo.style.opacity = esPrestador ? '0.4' : '1';
         });
+        const sinMatricula = ['enfermera','preventivista'];
+        const req = document.getElementById('matriculaReq');
+        const opc = document.getElementById('matriculaOpc');
+        if (req && opc) {
+            if (sinMatricula.includes(profesion)) { req.classList.add('hidden'); opc.classList.remove('hidden'); }
+            else { req.classList.remove('hidden'); opc.classList.add('hidden'); }
+        }
+    }
 
-      // ── ENVÍO DEL FORMULARIO ──
-      document
-        .getElementById("formSolicitud")
-        .addEventListener("submit", async function (e) {
-          e.preventDefault();
+    document.getElementById('profesion').addEventListener('change', toggleTipoSolicitud);
 
-          const btn = document.getElementById("btnEnviar");
-          const msg = document.getElementById("mensajeResultado");
-          btn.disabled = true;
-          btn.innerHTML =
-            '<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...';
+    document.getElementById('dni').addEventListener('blur', function() {
+        const val = this.value.trim();
+        if (val && !/^\d{7,8}$/.test(val)) this.style.borderColor = '#dc2626';
+        else this.style.borderColor = '';
+    });
 
-          const data = {
-            dni: document.getElementById("dni").value.trim(),
-            apellido: document.getElementById("apellido").value.trim(),
-            nombre: document.getElementById("nombre").value.trim(),
-            fecha_nacimiento: document.getElementById("fecha_nacimiento").value,
-            profesion: document.getElementById("profesion").value,
-            universidad: document.getElementById("universidad").value.trim(),
-            matricula: document.getElementById("matricula").value.trim(),
-            telefono: document.getElementById("telefono").value.trim(),
-            email: document.getElementById("email").value.trim(),
-            prestador_id: document.getElementById("prestador_id").value || null,
-            observaciones: document
-              .getElementById("observaciones")
-              .value.trim(),
-          };
-          // Validación frontend
-          const sinMatricula = ["enfermera", "preventivista"];
-          const errores = [];
+    document.getElementById('telefono').addEventListener('blur', function() {
+        const val = this.value.trim().replace(/[\s\-]/g, '');
+        if (val && !/^\d{8,15}$/.test(val)) this.style.borderColor = '#dc2626';
+        else this.style.borderColor = '';
+    });
 
-          // DNI
-          if (!/^\d{7,8}$/.test(data.dni))
-            errores.push("DNI inválido — debe tener 7 u 8 dígitos.");
+    document.getElementById('formSolicitud').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const btn = document.getElementById('btnEnviar');
+        const msg = document.getElementById('mensajeResultado');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...';
 
-          // Fecha nacimiento
-          if (!data.fecha_nacimiento) {
-            errores.push("Fecha de nacimiento requerida.");
-          } else {
-            const hoy = new Date();
-            const nac = new Date(data.fecha_nacimiento);
-            const edad = (hoy - nac) / (1000 * 60 * 60 * 24 * 365.25);
-            if (nac.getFullYear() < 1920)
-              errores.push("Fecha de nacimiento inválida.");
-            else if (edad < 18)
-              errores.push("Debés ser mayor de 18 años para registrarte.");
-            else if (nac > hoy)
-              errores.push("La fecha de nacimiento no puede ser futura.");
-          }
+        const profesion = document.getElementById('profesion').value;
+        const esPrestador = PRESTADORES_INSTITUCIONALES.includes(profesion);
+        const sinMatricula = ['enfermera','preventivista'];
+        const errores = [];
 
-          // Nombre y apellido
-          if (!data.apellido || data.apellido.length < 2)
-            errores.push("Apellido inválido.");
-          if (!data.nombre || data.nombre.length < 2)
-            errores.push("Nombre inválido.");
+        if (!esPrestador) {
+            if (!/^\d{6,8}[a-zA-Z]?$|^[a-zA-Z]?\d{6,8}$/.test(document.getElementById('dni').value.trim()))
+                errores.push('DNI inválido — debe tener 7 u 8 dígitos.');
+            if (!document.getElementById('fecha_nacimiento').value) {
+                errores.push('Fecha de nacimiento requerida.');
+            } else {
+                const hoy = new Date();
+                const nac = new Date(document.getElementById('fecha_nacimiento').value);
+                const edad = (hoy - nac) / (1000 * 60 * 60 * 24 * 365.25);
+                if (nac.getFullYear() < 1920) errores.push('Fecha de nacimiento inválida.');
+                else if (edad < 18) errores.push('Debés ser mayor de 18 años.');
+                else if (nac > hoy) errores.push('La fecha no puede ser futura.');
+            }
+            if (!document.getElementById('apellido').value.trim() || document.getElementById('apellido').value.trim().length < 2)
+                errores.push('Apellido inválido.');
+            if (!document.getElementById('nombre').value.trim() || document.getElementById('nombre').value.trim().length < 2)
+                errores.push('Nombre inválido.');
+            if (!/^\d{8,15}$/.test(document.getElementById('telefono').value.trim().replace(/[\s\-]/g,'')))
+                errores.push('Teléfono inválido.');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('email').value.trim()))
+                errores.push('Email inválido.');
+            if (!profesion) errores.push('Seleccioná una profesión.');
+            if (!document.getElementById('matricula').value.trim() && !sinMatricula.includes(profesion))
+                errores.push('Matrícula requerida para tu profesión.');
+            if (!document.getElementById('prestador_id').value)
+                errores.push('Seleccioná el prestador al que pertenecés.');
+        } else {
+            if (!document.getElementById('nombre_institucion').value.trim()) errores.push('Nombre de la institución requerido.');
+            if (!document.getElementById('cuit').value.trim()) errores.push('CUIT requerido.');
+            if (!document.getElementById('mail_inst').value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('mail_inst').value.trim()))
+                errores.push('Mail institucional inválido.');
+            if (!document.getElementById('telefono_inst').value.trim()) errores.push('Teléfono institucional requerido.');
+            if (!document.getElementById('direccion').value.trim()) errores.push('Dirección requerida.');
+            if (!document.getElementById('localidad').value.trim()) errores.push('Localidad requerida.');
+            if (!document.getElementById('nombre_responsable').value.trim()) errores.push('Nombre del responsable requerido.');
+            if (!document.getElementById('dni_responsable').value.trim()) errores.push('DNI del responsable requerido.');
+            if (!document.getElementById('matricula_responsable').value.trim()) errores.push('Matrícula del responsable requerida.');
+            if (!document.getElementById('mail_responsable').value.trim()) errores.push('Mail del responsable requerido.');
+        }
 
-          // Teléfono
-          if (!/^\d{8,15}$/.test(data.telefono.replace(/[\s\-]/g, "")))
-            errores.push("Teléfono inválido — mínimo 8 dígitos numéricos.");
-
-          // Email
-          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email))
-            errores.push("Email inválido.");
-
-          // Profesión y matrícula
-          if (!data.profesion) errores.push("Seleccioná una profesión.");
-          if (!data.matricula && !sinMatricula.includes(data.profesion))
-            errores.push("Matrícula requerida para tu profesión.");
-
-          // Prestador
-          if (!data.prestador_id)
-            errores.push("Seleccioná el prestador al que pertenecés.");
-
-          if (errores.length > 0) {
-            msg.classList.remove("hidden");
-            msg.className =
-              "mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200";
-            msg.innerHTML =
-              '<i class="fas fa-times-circle mr-2"></i><strong>Corregí los siguientes errores:</strong><ul class="mt-2 list-disc list-inside">' +
-              errores.map((e) => `<li>${e}</li>`).join("") +
-              "</ul>";
+        if (errores.length > 0) {
+            msg.classList.remove('hidden');
+            msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
+            msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i><strong>Corregí los siguientes errores:</strong><ul class="mt-2 list-disc list-inside">' +
+                errores.map(e => `<li>${e}</li>`).join('') + '</ul>';
             btn.disabled = false;
-            btn.innerHTML =
-              '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
             return;
-          }
+        }
 
-          try {
-            const res = await fetch("/solicitar-acceso", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(data),
+        const data = esPrestador ? {
+            tipo: 'prestador_institucional',
+            profesion,
+            nombre_institucion: document.getElementById('nombre_institucion').value.trim(),
+            cuit: document.getElementById('cuit').value.trim(),
+            telefono: document.getElementById('telefono_inst').value.trim(),
+            mail: document.getElementById('mail_inst').value.trim(),
+            direccion: document.getElementById('direccion').value.trim(),
+            localidad: document.getElementById('localidad').value.trim(),
+            provincia: document.getElementById('provincia').value.trim(),
+            nombre_responsable: document.getElementById('nombre_responsable').value.trim(),
+            dni_responsable: document.getElementById('dni_responsable').value.trim(),
+            matricula_responsable: document.getElementById('matricula_responsable').value.trim(),
+            telefono_responsable: document.getElementById('telefono_responsable').value.trim(),
+            mail_responsable: document.getElementById('mail_responsable').value.trim(),
+        } : {
+            tipo: 'profesional',
+            dni: document.getElementById('dni').value.trim(),
+            apellido: document.getElementById('apellido').value.trim(),
+            nombre: document.getElementById('nombre').value.trim(),
+            fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+            profesion,
+            universidad: document.getElementById('universidad').value.trim(),
+            matricula: document.getElementById('matricula').value.trim(),
+            telefono: document.getElementById('telefono').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            prestador_id: document.getElementById('prestador_id').value || null,
+        };
+
+        try {
+            const res = await fetch('/solicitar-acceso', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
             });
             const result = await res.json();
-
-            msg.classList.remove("hidden");
+            msg.classList.remove('hidden');
             if (result.success) {
-              msg.className =
-                "mb-6 p-4 rounded-lg text-sm font-medium border bg-green-50 text-green-700 border-green-200";
-              msg.innerHTML =
-                '<i class="fas fa-check-circle mr-2"></i>' + result.message;
-              document.getElementById("formSolicitud").reset();
-              btn.disabled = false;
-              btn.innerHTML =
-                '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+                msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-green-50 text-green-700 border-green-200';
+                msg.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + result.message;
+                document.getElementById('formSolicitud').reset();
+                toggleTipoSolicitud();
             } else {
-              msg.className =
-                "mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200";
-              msg.innerHTML =
-                '<i class="fas fa-times-circle mr-2"></i>' + result.message;
-              btn.disabled = false;
-              btn.innerHTML =
-                '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+                msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
+                msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>' + result.message;
             }
-          } catch (err) {
-            msg.classList.remove("hidden");
-            msg.className =
-              "mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200";
-            msg.innerHTML =
-              '<i class="fas fa-times-circle mr-2"></i>Error de conexión. Intentá de nuevo.';
             btn.disabled = false;
-            btn.innerHTML =
-              '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
-          }
-        });
-      document.getElementById("dni").addEventListener("blur", function () {
-        const val = this.value.trim();
-        if (val && !/^\d{7,8}$/.test(val)) {
-          this.style.borderColor = "#dc2626";
-          this.title = "DNI inválido";
-        } else {
-          this.style.borderColor = "";
+            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+        } catch (err) {
+            msg.classList.remove('hidden');
+            msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
+            msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Error de conexión. Intentá de nuevo.';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
         }
-      });
-
-      document.getElementById("telefono").addEventListener("blur", function () {
-        const val = this.value.trim().replace(/[\s\-]/g, "");
-        if (val && !/^\d{8,15}$/.test(val)) {
-          this.style.borderColor = "#dc2626";
-        } else {
-          this.style.borderColor = "";
-        }
-      });
-    </script>
+    });
+</script>
   </body>
 </html>

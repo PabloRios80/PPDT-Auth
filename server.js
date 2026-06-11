@@ -72,6 +72,51 @@ app.post('/solicitar-acceso', async (req, res) => {
     }
 });
 
+async function solicitarAccesoPrestador(req, res) {
+    try {
+        const d = req.body;
+        
+        // Verificar si ya existe
+        const { data: existe } = await supabase
+            .from('prestadores_institucionales')
+            .select('id, activo')
+            .eq('cuit', d.cuit)
+            .single();
+
+        if (existe) {
+            if (existe.activo) return res.json({ success: false, message: 'Este prestador ya tiene acceso al sistema.' });
+            return res.json({ success: false, message: 'La solicitud ya fue recibida y está pendiente de aprobación.' });
+        }
+
+        const { error } = await supabase
+            .from('prestadores_institucionales')
+            .insert({
+                nombre_institucion:   d.nombre_institucion,
+                cuit:                 d.cuit,
+                telefono:             d.telefono,
+                mail:                 d.mail,
+                direccion:            d.direccion,
+                localidad:            d.localidad,
+                provincia:            d.provincia,
+                nombre_responsable:   d.nombre_responsable,
+                dni_responsable:      d.dni_responsable,
+                matricula_responsable: d.matricula_responsable,
+                telefono_responsable:  d.telefono_responsable,
+                mail_responsable:      d.mail_responsable,
+                especialidad:          d.profesion,
+                activo:                false,
+                fecha_solicitud:       new Date().toISOString()
+            });
+
+        if (error) return res.json({ success: false, message: 'Error al registrar la solicitud.' });
+
+        console.log(`✅ Nueva solicitud prestador: ${d.nombre_institucion}`);
+        res.json({ success: true, message: 'Solicitud enviada. Recibirás tus credenciales una vez aprobada.' });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Error de conexión.' });
+    }
+}
 // ── LOGIN ──
 app.post('/login', async (req, res) => {
     try {
