@@ -20,22 +20,25 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── SOLICITAR ACCESO ──
+// ── SOLICITAR ACCESO ──
 app.post('/solicitar-acceso', async (req, res) => {
+    if (req.body.tipo === 'prestador_institucional') {
+        return solicitarAccesoPrestador(req, res);
+    }
+
     try {
         const {
             dni, apellido, nombre, fecha_nacimiento,
             profesion, universidad, matricula,
-            telefono, email, prestador_id, observaciones
+            telefono, email, prestador_id
         } = req.body;
 
-        // Validar campos obligatorios
         const sinMatricula = ['enfermera', 'preventivista'];
         if (!dni || !apellido || !nombre || !profesion || !email || 
             (!matricula && !sinMatricula.includes(profesion))) {
             return res.json({ success: false, message: 'Completá todos los campos obligatorios.' });
         }
 
-        // Verificar si ya existe
         const { data: existe } = await supabase
             .from('profesionales')
             .select('id, activo')
@@ -47,14 +50,13 @@ app.post('/solicitar-acceso', async (req, res) => {
             return res.json({ success: false, message: 'Tu solicitud ya fue recibida y está pendiente de aprobación.' });
         }
 
-        // Insertar solicitud
         const { error } = await supabase
             .from('profesionales')
             .insert({
                 dni, apellido, nombre, fecha_nacimiento,
                 profesion, universidad, matricula,
                 telefono, email, prestador_id,
-                observaciones, activo: false,
+                activo: false,
                 fecha_solicitud: new Date().toISOString()
             });
 
