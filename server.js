@@ -351,11 +351,12 @@ app.post('/aprobar-prestador', async (req, res) => {
         const id = parseInt(req.body.id);
         console.log('Aprobando prestador id:', id);
         const { data: prest } = await supabase
-        console.log('Prestador encontrado:', prest)
             .from('prestadores_institucionales')
             .select('nombre_institucion, cuit, especialidad')
             .eq('id', id)
             .single();
+
+        console.log('Prestador encontrado:', prest);
 
         if (!prest) return res.json({ success: false, message: 'Prestador no encontrado.' });
 
