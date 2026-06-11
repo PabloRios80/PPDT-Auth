@@ -335,30 +335,35 @@ async function aprobarPrestador(id, nombre) {
     });
     const data = await res.json();
     if (data.success) {
-        const textoCredenciales = `Acceso Portal Prestadores IAPOS\nInstitución: ${nombre}\nUsuario: ${data.usuario}\nContraseña temporal: ${data.passwordTemporal}\nIngresá en: https://prestadores.diapreventivoiapos.com\nDeberás cambiar la contraseña al primer ingreso.`;
+        const textoCredenciales = 'Acceso Portal Prestadores IAPOS\nInstitución: ' + nombre + '\nUsuario: ' + data.usuario + '\nContraseña temporal: ' + data.passwordTemporal + '\nIngresá en: https://prestadores.diapreventivoiapos.com\nDeberás cambiar la contraseña al primer ingreso.';
         const card = btn.closest('.bg-white');
-        card.innerHTML += `
-            <div style="margin-top:12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px;">
-                <p style="font-weight:700; color:#16a34a; margin-bottom:8px;"><i class="fas fa-check-circle mr-2"></i>Prestador aprobado</p>
-                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:10px; font-family:monospace; font-size:13px; color:#166534; margin-bottom:10px;">
-                    <p>👤 Usuario: <strong>${data.usuario}</strong></p>
-                    <p>🔑 Contraseña temporal: <strong>${data.passwordTemporal}</strong></p>
-                </div>
-                <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
-                    <button onclick="navigator.clipboard.writeText(\`${textoCredenciales}\`).then(()=>alert('Copiado'))"
-                        style="background:#014189; color:white; border:none; border-radius:6px; padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;">
-                        <i class="fas fa-copy mr-1"></i>Copiar
-                    </button>
-                    <a href="https://wa.me/?text=${encodeURIComponent(textoCredenciales)}" target="_blank"
-                        style="background:#25D366; color:white; border-radius:6px; padding:7px 14px; font-size:12px; font-weight:700; text-decoration:none;">
-                        <i class="fab fa-whatsapp mr-1"></i>WhatsApp
-                    </a>
-                </div>
-                <button onclick="cargarPrestadores()"
-                    style="background:#014189; color:white; border:none; border-radius:6px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; width:100%;">
-                    <i class="fas fa-check mr-1"></i>Listo — volver a la lista
+        const div = document.createElement('div');
+        div.style.cssText = 'margin-top:12px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px;';
+        div.innerHTML = `
+            <p style="font-weight:700; color:#16a34a; margin-bottom:8px;"><i class="fas fa-check-circle mr-2"></i>Prestador aprobado</p>
+            <div style="background:#fff; border:1px solid #e2e8f0; border-radius:6px; padding:10px; font-family:monospace; font-size:13px; color:#166534; margin-bottom:10px;">
+                <p>👤 Usuario: <strong>${data.usuario}</strong></p>
+                <p>🔑 Contraseña temporal: <strong>${data.passwordTemporal}</strong></p>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+                <button style="background:#014189; color:white; border:none; border-radius:6px; padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;" id="btnCopiarPrest">
+                    <i class="fas fa-copy mr-1"></i>Copiar
                 </button>
-            </div>`;
+                <a href="https://wa.me/?text=${encodeURIComponent(textoCredenciales)}" target="_blank"
+                    style="background:#25D366; color:white; border-radius:6px; padding:7px 14px; font-size:12px; font-weight:700; text-decoration:none;">
+                    <i class="fab fa-whatsapp mr-1"></i>WhatsApp
+                </a>
+            </div>
+            <button id="btnListoPrest" style="background:#014189; color:white; border:none; border-radius:6px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; width:100%;">
+                <i class="fas fa-check mr-1"></i>Listo — volver a la lista
+            </button>`;
+        card.appendChild(div);
+        div.querySelector('#btnCopiarPrest').addEventListener('click', () => {
+            navigator.clipboard.writeText(textoCredenciales).then(() => alert('Copiado'));
+        });
+        div.querySelector('#btnListoPrest').addEventListener('click', () => {
+            cargarPrestadores();
+        });
     } else {
         alert('Error: ' + data.message);
         btn.disabled = false;
