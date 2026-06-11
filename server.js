@@ -324,4 +324,80 @@ app.post('/desactivar-usuario', async (req, res) => {
     }
 });
 
+// ── LISTAR PRESTADORES PENDIENTES ──
+app.get('/prestadores-pendientes', async (req, res) => {
+    try {
+        const adminKey = req.headers['x-admin-key'];
+        if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ success: false });
+
+        const { data } = await supabase
+            .from('prestadores_institucionales')
+            .select('*')
+            .eq('activo', false)
+            .order('fecha_solicitud', { ascending: false });
+
+        res.json({ success: true, prestadores: data || [] });
+    } catch (error) {
+        res.status(500).json({ success: false });
+    }
+});
+
+// ── APROBAR PRESTADOR ──
+app.post('/aprobar-prestador', async (req, res) => {
+    try {
+        const adminKey = req.headers['x-admin-key'];
+        if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ success: false });
+
+        const { id } = req.body;
+
+        const { data: prest } = await supabase
+            .from('prestadores_institucionales')
+            .select('nombre_institucion, cuit, especialidad')
+            .eq('id', id)
+            .single();
+
+        if (!prest) return res.json({ success: false, message: 'Prestador no encontrado.' });
+
+        const usuario = prest.nombre_institucion.toLowerCase()
+            .replace(/\s+/g, '').replace(/[^a-z0-9]/g, '').slice(0, 10) + 
+            prest.cuit.slice(-4);
+        const passwordTemporal = Math.random().toString(36).slice(-8).toUpperCase();
+        const passwordHash = await bcrypt.hash(passwordTemporal, 10);
+
+        await supabase
+            .from('prestadores_institucionales')
+            .update({
+                usuario,
+                password_hash: passwordHash,
+                password_temporal: passwordTemporal,
+                activo: true,
+                debe_cambiar_password: true,
+                rol: prest.especialidad,
+                fecha_alta: new Date().toISOString(),
+                aprobado_por: 'admin'
+            })
+            .eq('id', id);
+
+        console.log(`✅ Prestador aprobado: ${usuario} / ${passwordTemporal}`);
+        res.json({ success: true, usuario, passwordTemporal, message: `Prestador creado: ${usuario}` });
+
+    } catch (error) {
+        console.error('Error en /aprobar-prestador:', error.message);
+        res.status(500).json({ success: false, message: 'Error de conexión.' });
+    }
+});
+
+// ── RECHAZAR PRESTADOR ──
+app.post('/rechazar-prestador', async (req, res) => {
+    try {
+        const adminKey = req.headers['x-admin-key'];
+        if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ success: false });
+
+        await supabase.from('prestadores_institucionales').delete().eq('id', req.body.id);
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ success: false });
+    }
+});
+
 app.listen(PORT, () => console.log(`PPDT-Auth corriendo en http://localhost:${PORT}`));
