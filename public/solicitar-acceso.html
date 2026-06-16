@@ -193,7 +193,9 @@
                       </option>
                     </optgroup>
                     <optgroup label="── Prestadores institucionales ──">
-                      <option value="laboratorio">Laboratorio Bioquímico (institución)</option>
+                      <option value="laboratorio">
+                        Laboratorio Bioquímico (institución)
+                      </option>
                       <option value="imagenes">
                         Centro de Diagnóstico por Imágenes
                       </option>
@@ -202,6 +204,7 @@
                       <option value="biopsias">Biopsias</option>
                       <option value="papanicolau">Papanicolau</option>
                       <option value="oftalmologia">Oftalmología</option>
+                      <option value="espirometria">Espirometría</option>
                     </optgroup>
                   </select>
                 </div>
@@ -442,160 +445,251 @@
       <p>&copy; 2025 IAPOS. Programa Día Preventivo de la Salud.</p>
     </footer>
 
-  <script>
-    const PRESTADORES_INSTITUCIONALES = ['laboratorio','imagenes','gastro','densitometria','biopsias','papanicolau','oftalmologia'];
+    <script>
+    const PRESTADORES_INSTITUCIONALES = ['laboratorio','imagenes','gastro','densitometria','biopsias','papanicolau','oftalmologia','espirometria'];
 
-    function toggleTipoSolicitud() {
-        const profesion = document.getElementById('profesion').value;
+      function toggleTipoSolicitud() {
+        const profesion = document.getElementById("profesion").value;
         const esPrestador = PRESTADORES_INSTITUCIONALES.includes(profesion);
-        document.getElementById('campoProfesional').classList.toggle('hidden', esPrestador);
-        document.getElementById('campoPrestadorInstitucional').classList.toggle('hidden', !esPrestador);
-        const camposPersonales = ['fecha_nacimiento','apellido','nombre','telefono','email'];
-        camposPersonales.forEach(id => {
-            const campo = document.getElementById(id)?.closest('div');
-            if (campo) campo.style.opacity = esPrestador ? '0.4' : '1';
+        document
+          .getElementById("campoProfesional")
+          .classList.toggle("hidden", esPrestador);
+        document
+          .getElementById("campoPrestadorInstitucional")
+          .classList.toggle("hidden", !esPrestador);
+        const camposPersonales = [
+          "fecha_nacimiento",
+          "apellido",
+          "nombre",
+          "telefono",
+          "email",
+        ];
+        camposPersonales.forEach((id) => {
+          const campo = document.getElementById(id)?.closest("div");
+          if (campo) campo.style.opacity = esPrestador ? "0.4" : "1";
         });
-        const sinMatricula = ['enfermera','preventivista'];
-        const req = document.getElementById('matriculaReq');
-        const opc = document.getElementById('matriculaOpc');
+        const sinMatricula = ["enfermera", "preventivista"];
+        const req = document.getElementById("matriculaReq");
+        const opc = document.getElementById("matriculaOpc");
         if (req && opc) {
-            if (sinMatricula.includes(profesion)) { req.classList.add('hidden'); opc.classList.remove('hidden'); }
-            else { req.classList.remove('hidden'); opc.classList.add('hidden'); }
+          if (sinMatricula.includes(profesion)) {
+            req.classList.add("hidden");
+            opc.classList.remove("hidden");
+          } else {
+            req.classList.remove("hidden");
+            opc.classList.add("hidden");
+          }
         }
-    }
+      }
 
-    document.getElementById('profesion').addEventListener('change', toggleTipoSolicitud);
+      document
+        .getElementById("profesion")
+        .addEventListener("change", toggleTipoSolicitud);
 
-    document.getElementById('dni').addEventListener('blur', function() {
+      document.getElementById("dni").addEventListener("blur", function () {
         const val = this.value.trim();
-        if (val && !/^\d{7,8}$/.test(val)) this.style.borderColor = '#dc2626';
-        else this.style.borderColor = '';
-    });
+        if (val && !/^\d{7,8}$/.test(val)) this.style.borderColor = "#dc2626";
+        else this.style.borderColor = "";
+      });
 
-    document.getElementById('telefono').addEventListener('blur', function() {
-        const val = this.value.trim().replace(/[\s\-]/g, '');
-        if (val && !/^\d{8,15}$/.test(val)) this.style.borderColor = '#dc2626';
-        else this.style.borderColor = '';
-    });
+      document.getElementById("telefono").addEventListener("blur", function () {
+        const val = this.value.trim().replace(/[\s\-]/g, "");
+        if (val && !/^\d{8,15}$/.test(val)) this.style.borderColor = "#dc2626";
+        else this.style.borderColor = "";
+      });
 
-    document.getElementById('formSolicitud').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const btn = document.getElementById('btnEnviar');
-        const msg = document.getElementById('mensajeResultado');
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...';
+      document
+        .getElementById("formSolicitud")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+          const btn = document.getElementById("btnEnviar");
+          const msg = document.getElementById("mensajeResultado");
+          btn.disabled = true;
+          btn.innerHTML =
+            '<i class="fas fa-spinner fa-spin mr-2"></i>Enviando...';
 
-        const profesion = document.getElementById('profesion').value;
-        const esPrestador = PRESTADORES_INSTITUCIONALES.includes(profesion);
-        const sinMatricula = ['enfermera','preventivista'];
-        const errores = [];
+          const profesion = document.getElementById("profesion").value;
+          const esPrestador = PRESTADORES_INSTITUCIONALES.includes(profesion);
+          const sinMatricula = ["enfermera", "preventivista"];
+          const errores = [];
 
-        if (!esPrestador) {
-            if (!/^\d{6,8}[a-zA-Z]?$|^[a-zA-Z]?\d{6,8}$/.test(document.getElementById('dni').value.trim()))
-                errores.push('DNI inválido — debe tener 7 u 8 dígitos.');
-            if (!document.getElementById('fecha_nacimiento').value) {
-                errores.push('Fecha de nacimiento requerida.');
+          if (!esPrestador) {
+            if (
+              !/^\d{6,8}[a-zA-Z]?$|^[a-zA-Z]?\d{6,8}$/.test(
+                document.getElementById("dni").value.trim(),
+              )
+            )
+              errores.push("DNI inválido — debe tener 7 u 8 dígitos.");
+            if (!document.getElementById("fecha_nacimiento").value) {
+              errores.push("Fecha de nacimiento requerida.");
             } else {
-                const hoy = new Date();
-                const nac = new Date(document.getElementById('fecha_nacimiento').value);
-                const edad = (hoy - nac) / (1000 * 60 * 60 * 24 * 365.25);
-                if (nac.getFullYear() < 1920) errores.push('Fecha de nacimiento inválida.');
-                else if (edad < 18) errores.push('Debés ser mayor de 18 años.');
-                else if (nac > hoy) errores.push('La fecha no puede ser futura.');
+              const hoy = new Date();
+              const nac = new Date(
+                document.getElementById("fecha_nacimiento").value,
+              );
+              const edad = (hoy - nac) / (1000 * 60 * 60 * 24 * 365.25);
+              if (nac.getFullYear() < 1920)
+                errores.push("Fecha de nacimiento inválida.");
+              else if (edad < 18) errores.push("Debés ser mayor de 18 años.");
+              else if (nac > hoy) errores.push("La fecha no puede ser futura.");
             }
-            if (!document.getElementById('apellido').value.trim() || document.getElementById('apellido').value.trim().length < 2)
-                errores.push('Apellido inválido.');
-            if (!document.getElementById('nombre').value.trim() || document.getElementById('nombre').value.trim().length < 2)
-                errores.push('Nombre inválido.');
-            if (!/^\d{8,15}$/.test(document.getElementById('telefono').value.trim().replace(/[\s\-]/g,'')))
-                errores.push('Teléfono inválido.');
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('email').value.trim()))
-                errores.push('Email inválido.');
-            if (!profesion) errores.push('Seleccioná una profesión.');
-            if (!document.getElementById('matricula').value.trim() && !sinMatricula.includes(profesion))
-                errores.push('Matrícula requerida para tu profesión.');
-            if (!document.getElementById('prestador_id').value)
-                errores.push('Seleccioná el prestador al que pertenecés.');
-        } else {
-            if (!document.getElementById('nombre_institucion').value.trim()) errores.push('Nombre de la institución requerido.');
-            if (!document.getElementById('cuit').value.trim()) errores.push('CUIT requerido.');
-            if (!document.getElementById('mail_inst').value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('mail_inst').value.trim()))
-                errores.push('Mail institucional inválido.');
-            if (!document.getElementById('telefono_inst').value.trim()) errores.push('Teléfono institucional requerido.');
-            if (!document.getElementById('direccion').value.trim()) errores.push('Dirección requerida.');
-            if (!document.getElementById('localidad').value.trim()) errores.push('Localidad requerida.');
-            if (!document.getElementById('nombre_responsable').value.trim()) errores.push('Nombre del responsable requerido.');
-            if (!document.getElementById('dni_responsable').value.trim()) errores.push('DNI del responsable requerido.');
-            if (!document.getElementById('matricula_responsable').value.trim()) errores.push('Matrícula del responsable requerida.');
-            if (!document.getElementById('mail_responsable').value.trim()) errores.push('Mail del responsable requerido.');
-        }
+            if (
+              !document.getElementById("apellido").value.trim() ||
+              document.getElementById("apellido").value.trim().length < 2
+            )
+              errores.push("Apellido inválido.");
+            if (
+              !document.getElementById("nombre").value.trim() ||
+              document.getElementById("nombre").value.trim().length < 2
+            )
+              errores.push("Nombre inválido.");
+            if (
+              !/^\d{8,15}$/.test(
+                document
+                  .getElementById("telefono")
+                  .value.trim()
+                  .replace(/[\s\-]/g, ""),
+              )
+            )
+              errores.push("Teléfono inválido.");
+            if (
+              !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                document.getElementById("email").value.trim(),
+              )
+            )
+              errores.push("Email inválido.");
+            if (!profesion) errores.push("Seleccioná una profesión.");
+            if (
+              !document.getElementById("matricula").value.trim() &&
+              !sinMatricula.includes(profesion)
+            )
+              errores.push("Matrícula requerida para tu profesión.");
+            if (!document.getElementById("prestador_id").value)
+              errores.push("Seleccioná el prestador al que pertenecés.");
+          } else {
+            if (!document.getElementById("nombre_institucion").value.trim())
+              errores.push("Nombre de la institución requerido.");
+            if (!document.getElementById("cuit").value.trim())
+              errores.push("CUIT requerido.");
+            if (
+              !document.getElementById("mail_inst").value.trim() ||
+              !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                document.getElementById("mail_inst").value.trim(),
+              )
+            )
+              errores.push("Mail institucional inválido.");
+            if (!document.getElementById("telefono_inst").value.trim())
+              errores.push("Teléfono institucional requerido.");
+            if (!document.getElementById("direccion").value.trim())
+              errores.push("Dirección requerida.");
+            if (!document.getElementById("localidad").value.trim())
+              errores.push("Localidad requerida.");
+            if (!document.getElementById("nombre_responsable").value.trim())
+              errores.push("Nombre del responsable requerido.");
+            if (!document.getElementById("dni_responsable").value.trim())
+              errores.push("DNI del responsable requerido.");
+            if (!document.getElementById("matricula_responsable").value.trim())
+              errores.push("Matrícula del responsable requerida.");
+            if (!document.getElementById("mail_responsable").value.trim())
+              errores.push("Mail del responsable requerido.");
+          }
 
-        if (errores.length > 0) {
-            msg.classList.remove('hidden');
-            msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
-            msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i><strong>Corregí los siguientes errores:</strong><ul class="mt-2 list-disc list-inside">' +
-                errores.map(e => `<li>${e}</li>`).join('') + '</ul>';
+          if (errores.length > 0) {
+            msg.classList.remove("hidden");
+            msg.className =
+              "mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200";
+            msg.innerHTML =
+              '<i class="fas fa-times-circle mr-2"></i><strong>Corregí los siguientes errores:</strong><ul class="mt-2 list-disc list-inside">' +
+              errores.map((e) => `<li>${e}</li>`).join("") +
+              "</ul>";
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+            btn.innerHTML =
+              '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
             return;
-        }
+          }
 
-        const data = esPrestador ? {
-            tipo: 'prestador_institucional',
-            profesion,
-            nombre_institucion: document.getElementById('nombre_institucion').value.trim(),
-            cuit: document.getElementById('cuit').value.trim(),
-            telefono: document.getElementById('telefono_inst').value.trim(),
-            mail: document.getElementById('mail_inst').value.trim(),
-            direccion: document.getElementById('direccion').value.trim(),
-            localidad: document.getElementById('localidad').value.trim(),
-            provincia: document.getElementById('provincia').value.trim(),
-            nombre_responsable: document.getElementById('nombre_responsable').value.trim(),
-            dni_responsable: document.getElementById('dni_responsable').value.trim(),
-            matricula_responsable: document.getElementById('matricula_responsable').value.trim(),
-            telefono_responsable: document.getElementById('telefono_responsable').value.trim(),
-            mail_responsable: document.getElementById('mail_responsable').value.trim(),
-        } : {
-            tipo: 'profesional',
-            dni: document.getElementById('dni').value.trim(),
-            apellido: document.getElementById('apellido').value.trim(),
-            nombre: document.getElementById('nombre').value.trim(),
-            fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
-            profesion,
-            universidad: document.getElementById('universidad').value.trim(),
-            matricula: document.getElementById('matricula').value.trim(),
-            telefono: document.getElementById('telefono').value.trim(),
-            email: document.getElementById('email').value.trim(),
-            prestador_id: document.getElementById('prestador_id').value || null,
-        };
+          const data = esPrestador
+            ? {
+                tipo: "prestador_institucional",
+                profesion,
+                nombre_institucion: document
+                  .getElementById("nombre_institucion")
+                  .value.trim(),
+                cuit: document.getElementById("cuit").value.trim(),
+                telefono: document.getElementById("telefono_inst").value.trim(),
+                mail: document.getElementById("mail_inst").value.trim(),
+                direccion: document.getElementById("direccion").value.trim(),
+                localidad: document.getElementById("localidad").value.trim(),
+                provincia: document.getElementById("provincia").value.trim(),
+                nombre_responsable: document
+                  .getElementById("nombre_responsable")
+                  .value.trim(),
+                dni_responsable: document
+                  .getElementById("dni_responsable")
+                  .value.trim(),
+                matricula_responsable: document
+                  .getElementById("matricula_responsable")
+                  .value.trim(),
+                telefono_responsable: document
+                  .getElementById("telefono_responsable")
+                  .value.trim(),
+                mail_responsable: document
+                  .getElementById("mail_responsable")
+                  .value.trim(),
+              }
+            : {
+                tipo: "profesional",
+                dni: document.getElementById("dni").value.trim(),
+                apellido: document.getElementById("apellido").value.trim(),
+                nombre: document.getElementById("nombre").value.trim(),
+                fecha_nacimiento:
+                  document.getElementById("fecha_nacimiento").value,
+                profesion,
+                universidad: document
+                  .getElementById("universidad")
+                  .value.trim(),
+                matricula: document.getElementById("matricula").value.trim(),
+                telefono: document.getElementById("telefono").value.trim(),
+                email: document.getElementById("email").value.trim(),
+                prestador_id:
+                  document.getElementById("prestador_id").value || null,
+              };
 
-        try {
-            const res = await fetch('/solicitar-acceso', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
+          try {
+            const res = await fetch("/solicitar-acceso", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(data),
             });
             const result = await res.json();
-            msg.classList.remove('hidden');
+            msg.classList.remove("hidden");
             if (result.success) {
-                msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-green-50 text-green-700 border-green-200';
-                msg.innerHTML = '<i class="fas fa-check-circle mr-2"></i>' + result.message;
-                document.getElementById('formSolicitud').reset();
-                toggleTipoSolicitud();
+              msg.className =
+                "mb-6 p-4 rounded-lg text-sm font-medium border bg-green-50 text-green-700 border-green-200";
+              msg.innerHTML =
+                '<i class="fas fa-check-circle mr-2"></i>' + result.message;
+              document.getElementById("formSolicitud").reset();
+              toggleTipoSolicitud();
             } else {
-                msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
-                msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>' + result.message;
+              msg.className =
+                "mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200";
+              msg.innerHTML =
+                '<i class="fas fa-times-circle mr-2"></i>' + result.message;
             }
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
-        } catch (err) {
-            msg.classList.remove('hidden');
-            msg.className = 'mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200';
-            msg.innerHTML = '<i class="fas fa-times-circle mr-2"></i>Error de conexión. Intentá de nuevo.';
+            btn.innerHTML =
+              '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+          } catch (err) {
+            msg.classList.remove("hidden");
+            msg.className =
+              "mb-6 p-4 rounded-lg text-sm font-medium border bg-red-50 text-red-700 border-red-200";
+            msg.innerHTML =
+              '<i class="fas fa-times-circle mr-2"></i>Error de conexión. Intentá de nuevo.';
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
-        }
-    });
-</script>
+            btn.innerHTML =
+              '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
+          }
+        });
+    </script>
   </body>
 </html>

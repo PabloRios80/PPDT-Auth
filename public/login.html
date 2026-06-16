@@ -1,245 +1,376 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ingresar — Día Preventivo IAPOS</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>body { font-family: 'Montserrat', sans-serif; }</style>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
-
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <style>
+      body {
+        font-family: "Montserrat", sans-serif;
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100 min-h-screen flex flex-col">
     <!-- HEADER -->
-    <header style="background-color:#014189; padding:0; margin:0;">
-        <div style="background-color:#014189; padding:12px 20px; display:flex; align-items:center; gap:16px; max-width:1080px; margin:0 auto;">
-            <img src="images/logo_iapos.png" alt="Logo IAPOS" style="height:50px; display:block;">
-            <div>
-                <div style="font-family:'Montserrat',sans-serif; font-size:16px; font-weight:700; color:#fff;">
-                    Acceso Profesionales — Día Preventivo
-                </div>
-                <div style="font-family:'Montserrat',sans-serif; font-size:11px; color:#00A8E7; font-weight:600; text-transform:uppercase; letter-spacing:0.1em;">
-                    Instituto Autárquico Provincial de Obra Social
-                </div>
-            </div>
+    <header style="background-color: #014189; padding: 0; margin: 0">
+      <div
+        style="
+          background-color: #014189;
+          padding: 12px 20px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          max-width: 1080px;
+          margin: 0 auto;
+        "
+      >
+        <img
+          src="images/logo_iapos.png"
+          alt="Logo IAPOS"
+          style="height: 50px; display: block"
+        />
+        <div>
+          <div
+            style="
+              font-family: &quot;Montserrat&quot;, sans-serif;
+              font-size: 16px;
+              font-weight: 700;
+              color: #fff;
+            "
+          >
+            Acceso Profesionales — Día Preventivo
+          </div>
+          <div
+            style="
+              font-family: &quot;Montserrat&quot;, sans-serif;
+              font-size: 11px;
+              color: #00a8e7;
+              font-weight: 600;
+              text-transform: uppercase;
+              letter-spacing: 0.1em;
+            "
+          >
+            Instituto Autárquico Provincial de Obra Social
+          </div>
         </div>
-        <div style="background-color:#00A8E7; height:4px;"></div>
+      </div>
+      <div style="background-color: #00a8e7; height: 4px"></div>
     </header>
 
     <main class="flex-grow flex items-center justify-center py-10">
-        <div style="max-width:440px; width:100%; padding:0 16px;">
+      <div style="max-width: 440px; width: 100%; padding: 0 16px">
+        <!-- LOGIN -->
+        <div
+          id="panelLogin"
+          class="bg-white rounded-xl shadow-lg p-8 border border-blue-100"
+        >
+          <h2 class="text-lg font-bold text-blue-900 mb-1">
+            Ingresá al sistema
+          </h2>
+          <p class="text-sm text-gray-400 mb-6">
+            Usá las credenciales que recibiste por email.
+          </p>
 
-            <!-- LOGIN -->
-            <div id="panelLogin" class="bg-white rounded-xl shadow-lg p-8 border border-blue-100">
-                <h2 class="text-lg font-bold text-blue-900 mb-1">Ingresá al sistema</h2>
-                <p class="text-sm text-gray-400 mb-6">Usá las credenciales que recibiste por email.</p>
+          <div
+            id="loginMsg"
+            class="hidden mb-4 p-3 rounded-lg text-sm font-medium border"
+          ></div>
 
-                <div id="loginMsg" class="hidden mb-4 p-3 rounded-lg text-sm font-medium border"></div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Usuario</label
+            >
+            <input
+              type="text"
+              id="loginUsuario"
+              class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Tu usuario"
+            />
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Contraseña</label
+            >
+            <input
+              type="password"
+              id="loginPassword"
+              class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Tu contraseña"
+            />
+          </div>
 
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
-                    <input type="text" id="loginUsuario"
-                        class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="Tu usuario">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-                    <input type="password" id="loginPassword"
-                        class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="Tu contraseña">
-                </div>
+          <button
+            onclick="hacerLogin()"
+            id="btnLogin"
+            class="w-full py-3 rounded-lg font-bold text-white text-sm transition"
+            style="background-color: #014189"
+          >
+            <i class="fas fa-sign-in-alt mr-2"></i>Ingresar
+          </button>
 
-                <button onclick="hacerLogin()" id="btnLogin"
-                    class="w-full py-3 rounded-lg font-bold text-white text-sm transition"
-                    style="background-color:#014189;">
-                    <i class="fas fa-sign-in-alt mr-2"></i>Ingresar
-                </button>
-
-                <p class="text-xs text-center text-gray-400 mt-4">
-                    ¿No tenés acceso? <a href="https://acceso.diapreventivoiapos.com/solicitar-acceso.html" class="text-blue-600 font-medium hover:underline">Solicitalo aquí</a>
-                </p>
-            </div>
-
-            <!-- CAMBIAR CONTRASEÑA (oculto hasta primer login) -->
-            <div id="panelCambiarPass" class="hidden bg-white rounded-xl shadow-lg p-8 border border-yellow-200">
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-5 text-sm text-yellow-800">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>
-                    Es tu primer acceso. Debés cambiar tu contraseña antes de continuar.
-                </div>
-
-                <h2 class="text-lg font-bold text-blue-900 mb-5">Cambiar contraseña</h2>
-
-                <div id="cambiarMsg" class="hidden mb-4 p-3 rounded-lg text-sm font-medium border"></div>
-
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña actual (temporal)</label>
-                    <input type="password" id="passActual"
-                        class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nueva contraseña</label>
-                    <input type="password" id="passNueva"
-                        class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-                        placeholder="Mínimo 8 caracteres">
-                </div>
-                <div class="mb-6">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Repetir nueva contraseña</label>
-                    <input type="password" id="passNuevaRep"
-                        class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
-                </div>
-
-                <button onclick="cambiarPassword()" id="btnCambiar"
-                    class="w-full py-3 rounded-lg font-bold text-white text-sm transition"
-                    style="background-color:#014189;">
-                    <i class="fas fa-key mr-2"></i>Cambiar contraseña y continuar
-                </button>
-            </div>
-
+          <p class="text-xs text-center text-gray-400 mt-4">
+            ¿No tenés acceso?
+            <a
+              href="https://acceso.diapreventivoiapos.com/solicitar-acceso.html"
+              class="text-blue-600 font-medium hover:underline"
+              >Solicitalo aquí</a
+            >
+          </p>
         </div>
+
+        <!-- CAMBIAR CONTRASEÑA (oculto hasta primer login) -->
+        <div
+          id="panelCambiarPass"
+          class="hidden bg-white rounded-xl shadow-lg p-8 border border-yellow-200"
+        >
+          <div
+            class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-5 text-sm text-yellow-800"
+          >
+            <i class="fas fa-exclamation-triangle mr-2"></i>
+            Es tu primer acceso. Debés cambiar tu contraseña antes de continuar.
+          </div>
+
+          <h2 class="text-lg font-bold text-blue-900 mb-5">
+            Cambiar contraseña
+          </h2>
+
+          <div
+            id="cambiarMsg"
+            class="hidden mb-4 p-3 rounded-lg text-sm font-medium border"
+          ></div>
+
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Contraseña actual (temporal)</label
+            >
+            <input
+              type="password"
+              id="passActual"
+              class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Nueva contraseña</label
+            >
+            <input
+              type="password"
+              id="passNueva"
+              class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+              placeholder="Mínimo 8 caracteres"
+            />
+          </div>
+          <div class="mb-6">
+            <label class="block text-sm font-medium text-gray-700 mb-1"
+              >Repetir nueva contraseña</label
+            >
+            <input
+              type="password"
+              id="passNuevaRep"
+              class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+            />
+          </div>
+
+          <button
+            onclick="cambiarPassword()"
+            id="btnCambiar"
+            class="w-full py-3 rounded-lg font-bold text-white text-sm transition"
+            style="background-color: #014189"
+          >
+            <i class="fas fa-key mr-2"></i>Cambiar contraseña y continuar
+          </button>
+        </div>
+      </div>
     </main>
 
     <footer class="text-center text-sm text-gray-500 py-4">
-        <p>&copy; 2025 IAPOS. Programa Día Preventivo de la Salud.</p>
-        <a href="admin.html" class="text-xs text-gray-400 hover:text-gray-500 mt-1 inline-block">Admin</a>
+      <p>&copy; 2025 IAPOS. Programa Día Preventivo de la Salud.</p>
+      <a
+        href="admin.html"
+        class="text-xs text-gray-400 hover:text-gray-500 mt-1 inline-block"
+        >Admin</a
+      >
     </footer>
 
     <script>
-        const params = new URLSearchParams(window.location.search);
-        const redirect = params.get('redirect');
+      const params = new URLSearchParams(window.location.search);
+      const redirect = params.get("redirect");
+      const REDIRECCION_POR_ROL = {
+        medico: "https://cierre.diapreventivoiapos.com/index-medico.html",
+        enfermera:
+          "https://enfermeria.diapreventivoiapos.com/formulario-enfermeria.html",
+        bioquimico: "https://prestadores.diapreventivoiapos.com",
+        odontologo: "https://odontologia.diapreventivoiapos.com",
+        preventivista: "https://cierre.diapreventivoiapos.com",
+        admin: "https://cierre.diapreventivoiapos.com",
+        imagenes: "https://prestadores.diapreventivoiapos.com",
+        gastro: "https://prestadores.diapreventivoiapos.com",
+        densitometria: "https://prestadores.diapreventivoiapos.com",
+        biopsias: "https://prestadores.diapreventivoiapos.com",
+        papanicolau: "https://prestadores.diapreventivoiapos.com",
+        oftalmologia: "https://prestadores.diapreventivoiapos.com",
+        laboratorio: "https://prestadores.diapreventivoiapos.com",
+        espirometria: "https://prestadores.diapreventivoiapos.com",
+      };
+      let usuarioActual = "";
 
-        const REDIRECCION_POR_ROL = {
-            'medico':        'https://cierre.diapreventivoiapos.com/index-medico.html',
-            'enfermera':     'https://enfermeria.diapreventivoiapos.com/formulario-enfermeria.html',
-            'bioquimico':    'https://prestadores.diapreventivoiapos.com',
-            'odontologo':    'https://odontologia.diapreventivoiapos.com',
-            'preventivista': 'https://cierre.diapreventivoiapos.com',
-            'admin':         'https://cierre.diapreventivoiapos.com',
-            'imagenes':        'https://prestadores.diapreventivoiapos.com',
-            'gastro':          'https://prestadores.diapreventivoiapos.com',
-            'densitometria':   'https://prestadores.diapreventivoiapos.com',
-            'biopsias':        'https://prestadores.diapreventivoiapos.com',
-            'papanicolau':     'https://prestadores.diapreventivoiapos.com',
-            'oftalmologia':    'https://prestadores.diapreventivoiapos.com',
-            'laboratorio': 'https://prestadores.diapreventivoiapos.com',
-        };
+      async function hacerLogin() {
+        const usuario = document.getElementById("loginUsuario").value.trim();
+        const password = document.getElementById("loginPassword").value;
+        const btn = document.getElementById("btnLogin");
+        const msg = document.getElementById("loginMsg");
 
-        let usuarioActual = '';
-
-        async function hacerLogin() {
-            const usuario = document.getElementById('loginUsuario').value.trim();
-            const password = document.getElementById('loginPassword').value;
-            const btn = document.getElementById('btnLogin');
-            const msg = document.getElementById('loginMsg');
-
-            if (!usuario || !password) {
-                mostrarMsg(msg, false, 'Completá usuario y contraseña.');
-                return;
-            }
-
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verificando...';
-
-            try {
-                const res = await fetch('/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ usuario, password })
-                });
-                const data = await res.json();
-
-                if (!data.success) {
-                    mostrarMsg(msg, false, data.message);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Ingresar';
-                    return;
-                }
-
-                // Guardar token
-                localStorage.setItem('dpToken', data.token);
-                localStorage.setItem('dpProfesional', JSON.stringify(data.profesional));
-                usuarioActual = usuario;
-
-                if (data.debe_cambiar_password) {
-                    document.getElementById('panelLogin').classList.add('hidden');
-                    document.getElementById('panelCambiarPass').classList.remove('hidden');
-                } else {
-                    // Redirigir según rol/profesion
-                    const prof = data.profesional;
-                    const url = REDIRECCION_POR_ROL[prof.profesion] || REDIRECCION_POR_ROL[prof.rol] || '/';
-                    window.location.href = url + '?token=' + data.token;
-                }
-
-            } catch(e) {
-                mostrarMsg(msg, false, 'Error de conexión.');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Ingresar';
-            }
+        if (!usuario || !password) {
+          mostrarMsg(msg, false, "Completá usuario y contraseña.");
+          return;
         }
 
-        async function cambiarPassword() {
-            const passActual = document.getElementById('passActual').value;
-            const passNueva = document.getElementById('passNueva').value;
-            const passNuevaRep = document.getElementById('passNuevaRep').value;
-            const btn = document.getElementById('btnCambiar');
-            const msg = document.getElementById('cambiarMsg');
+        btn.disabled = true;
+        btn.innerHTML =
+          '<i class="fas fa-spinner fa-spin mr-2"></i>Verificando...';
 
-            if (passNueva.length < 8) {
-                mostrarMsg(msg, false, 'La nueva contraseña debe tener al menos 8 caracteres.');
-                return;
-            }
-            if (passNueva !== passNuevaRep) {
-                mostrarMsg(msg, false, 'Las contraseñas no coinciden.');
-                return;
-            }
+        try {
+          const res = await fetch("/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ usuario, password }),
+          });
+          const data = await res.json();
 
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
+          if (!data.success) {
+            mostrarMsg(msg, false, data.message);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Ingresar';
+            return;
+          }
 
-            try {
-                const res = await fetch('/cambiar-password', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        usuario: usuarioActual,
-                        password_actual: passActual,
-                        password_nuevo: passNueva
-                    })
-                });
-                const data = await res.json();
+          // Guardar token
+          localStorage.setItem("dpToken", data.token);
+          localStorage.setItem(
+            "dpProfesional",
+            JSON.stringify(data.profesional),
+          );
+          usuarioActual = usuario;
 
-                if (!data.success) {
-                    mostrarMsg(msg, false, data.message);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-key mr-2"></i>Cambiar contraseña y continuar';
-                    return;
-                }
+          if (data.debe_cambiar_password) {
+            document.getElementById("panelLogin").classList.add("hidden");
+            document
+              .getElementById("panelCambiarPass")
+              .classList.remove("hidden");
+          } else {
+            // Redirigir según rol/profesion
+            const prof = data.profesional;
+            const url =
+              REDIRECCION_POR_ROL[prof.profesion] ||
+              REDIRECCION_POR_ROL[prof.rol] ||
+              "/";
+            window.location.href = url + "?token=" + data.token;
+          }
+        } catch (e) {
+          mostrarMsg(msg, false, "Error de conexión.");
+          btn.disabled = false;
+          btn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Ingresar';
+        }
+      }
 
-                mostrarMsg(msg, true, 'Contraseña cambiada. Redirigiendo...');
-                const prof = JSON.parse(localStorage.getItem('dpProfesional') || '{}'); 
-                const url = REDIRECCION_POR_ROL[prof.profesion] || REDIRECCION_POR_ROL[prof.rol] || '/';
-                setTimeout(() => { window.location.href = url + '?token=' + localStorage.getItem('dpToken'); }, 1500);
+      async function cambiarPassword() {
+        const passActual = document.getElementById("passActual").value;
+        const passNueva = document.getElementById("passNueva").value;
+        const passNuevaRep = document.getElementById("passNuevaRep").value;
+        const btn = document.getElementById("btnCambiar");
+        const msg = document.getElementById("cambiarMsg");
 
-            } catch(e) {
-                mostrarMsg(msg, false, 'Error de conexión.');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-key mr-2"></i>Cambiar contraseña y continuar';
-            }
+        if (passNueva.length < 8) {
+          mostrarMsg(
+            msg,
+            false,
+            "La nueva contraseña debe tener al menos 8 caracteres.",
+          );
+          return;
+        }
+        if (passNueva !== passNuevaRep) {
+          mostrarMsg(msg, false, "Las contraseñas no coinciden.");
+          return;
         }
 
-        function mostrarMsg(el, ok, texto) {
-            el.classList.remove('hidden', 'bg-green-50', 'text-green-700', 'border-green-200',
-                                 'bg-red-50', 'text-red-700', 'border-red-200');
-            el.classList.add(ok ? 'bg-green-50' : 'bg-red-50',
-                             ok ? 'text-green-700' : 'text-red-700',
-                             ok ? 'border-green-200' : 'border-red-200');
-            el.innerHTML = `<i class="fas fa-${ok ? 'check' : 'times'}-circle mr-2"></i>${texto}`;
-        }
+        btn.disabled = true;
+        btn.innerHTML =
+          '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
 
-        // Enter para login
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') hacerLogin();
-        });
+        try {
+          const res = await fetch("/cambiar-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              usuario: usuarioActual,
+              password_actual: passActual,
+              password_nuevo: passNueva,
+            }),
+          });
+          const data = await res.json();
+
+          if (!data.success) {
+            mostrarMsg(msg, false, data.message);
+            btn.disabled = false;
+            btn.innerHTML =
+              '<i class="fas fa-key mr-2"></i>Cambiar contraseña y continuar';
+            return;
+          }
+
+          mostrarMsg(msg, true, "Contraseña cambiada. Redirigiendo...");
+          const prof = JSON.parse(
+            localStorage.getItem("dpProfesional") || "{}",
+          );
+          const url =
+            REDIRECCION_POR_ROL[prof.profesion] ||
+            REDIRECCION_POR_ROL[prof.rol] ||
+            "/";
+          setTimeout(() => {
+            window.location.href =
+              url + "?token=" + localStorage.getItem("dpToken");
+          }, 1500);
+        } catch (e) {
+          mostrarMsg(msg, false, "Error de conexión.");
+          btn.disabled = false;
+          btn.innerHTML =
+            '<i class="fas fa-key mr-2"></i>Cambiar contraseña y continuar';
+        }
+      }
+
+      function mostrarMsg(el, ok, texto) {
+        el.classList.remove(
+          "hidden",
+          "bg-green-50",
+          "text-green-700",
+          "border-green-200",
+          "bg-red-50",
+          "text-red-700",
+          "border-red-200",
+        );
+        el.classList.add(
+          ok ? "bg-green-50" : "bg-red-50",
+          ok ? "text-green-700" : "text-red-700",
+          ok ? "border-green-200" : "border-red-200",
+        );
+        el.innerHTML = `<i class="fas fa-${ok ? "check" : "times"}-circle mr-2"></i>${texto}`;
+      }
+
+      // Enter para login
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") hacerLogin();
+      });
     </script>
-</body>
+  </body>
 </html>
