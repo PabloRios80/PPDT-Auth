@@ -207,6 +207,9 @@
     <script>
       const params = new URLSearchParams(window.location.search);
       const redirect = params.get("redirect");
+      const REDIRECCION_OVERRIDE = {
+        prestadores: "https://prestadores.diapreventivoiapos.com",
+      };
       const REDIRECCION_POR_ROL = {
         medico: "https://cierre.diapreventivoiapos.com/index-medico.html",
         enfermera:
@@ -270,9 +273,10 @@
               .getElementById("panelCambiarPass")
               .classList.remove("hidden");
           } else {
-            // Redirigir según rol/profesion
+            // Redirigir según rol/profesion (con posible override por ?redirect=)
             const prof = data.profesional;
             const url =
+              REDIRECCION_OVERRIDE[redirect] ||
               REDIRECCION_POR_ROL[prof.profesion] ||
               REDIRECCION_POR_ROL[prof.rol] ||
               "/";
@@ -334,6 +338,7 @@
             localStorage.getItem("dpProfesional") || "{}",
           );
           const url =
+            REDIRECCION_OVERRIDE[redirect] ||
             REDIRECCION_POR_ROL[prof.profesion] ||
             REDIRECCION_POR_ROL[prof.rol] ||
             "/";
