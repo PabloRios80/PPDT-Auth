@@ -164,7 +164,7 @@ app.post('/login', async (req, res) => {
         const token = jwt.sign({
             id: profesional.id,
             usuario: profesional.usuario,
-            nombre: esPrestador ? profesional.nombre_institucion : profesional.nombre,
+            nombre: esPrestador ? profesional.nombre_institucion : `${profesional.profesion === 'bioquimico' ? 'Bioq.' : ''} ${profesional.nombre} ${profesional.apellido}`.trim(),
             apellido: esPrestador ? '' : profesional.apellido,
             rol: profesional.rol,
             profesion: esPrestador ? profesional.especialidad : profesional.profesion
@@ -175,7 +175,7 @@ app.post('/login', async (req, res) => {
             token,
             debe_cambiar_password: profesional.debe_cambiar_password,
             profesional: {
-                nombre: esPrestador ? profesional.nombre_institucion : profesional.nombre,
+                nombre: esPrestador ? profesional.nombre_institucion : `${profesional.profesion === 'bioquimico' ? 'Bioq.' : ''} ${profesional.nombre} ${profesional.apellido}`.trim(),
                 apellido: esPrestador ? '' : profesional.apellido,
                 rol: profesional.rol,
                 profesion: esPrestador ? profesional.especialidad : profesional.profesion
