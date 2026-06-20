@@ -15,6 +15,20 @@ const supabase = createClient(
     process.env.SUPABASE_SERVICE_KEY
 );
 
+const cors = require('cors');
+app.use(cors({
+    origin: [
+        'https://consultas.diapreventivoiapos.com',
+        'https://cierre.diapreventivoiapos.com',
+        'https://seguimiento.diapreventivoiapos.com',
+        'https://prestadores.diapreventivoiapos.com',
+        'https://enfermeria.diapreventivoiapos.com',
+        'https://odontologia.diapreventivoiapos.com'
+    ],
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
