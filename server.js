@@ -688,7 +688,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
       }
 
       estudiosEncontrados.push({
-        TipoEstudio: esIndividual ? "LaboratorioIndividual" : "Laboratorio",
+        TipoEstudio: esIndividual ? `Lab: ${nombrePractica}` : "Laboratorio",
         DNI: lab.dni,
         Nombre: lab.nombre || "",
         Apellido: lab.apellido || "",
