@@ -679,6 +679,13 @@ app.post("/api/estudios-paciente", async (req, res) => {
       );
 
       const esIndividual = lab.es_individual === true;
+      let nombrePractica = null;
+      if (esIndividual) {
+        const campoConValor = Object.entries(todosLosValores).find(
+          ([_, v]) => v !== "",
+        );
+        nombrePractica = campoConValor ? campoConValor[0] : "Individual";
+      }
 
       estudiosEncontrados.push({
         TipoEstudio: esIndividual ? "LaboratorioIndividual" : "Laboratorio",
@@ -689,7 +696,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
         Prestador: lab.prestador || "",
         LinkPDF: links[0] || "",
         LinksPDF: links,
-       ResultadosLaboratorio: esIndividual ? valoresConDato : todosLosValores
+        ResultadosLaboratorio: esIndividual ? valoresConDato : todosLosValores,
       });
     });
 
