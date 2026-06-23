@@ -678,7 +678,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
         Object.entries(todosLosValores).filter(([_, v]) => v !== ""),
       );
 
-      const esIndividual = Object.keys(valoresConDato).length <= 3;
+      const esIndividual = lab.es_individual === true;
 
       estudiosEncontrados.push({
         TipoEstudio: esIndividual ? "LaboratorioIndividual" : "Laboratorio",
