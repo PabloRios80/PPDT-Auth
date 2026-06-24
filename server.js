@@ -74,7 +74,7 @@ app.post("/solicitar-acceso", async (req, res) => {
     const { data: existe } = await supabase
       .from("profesionales")
       .select("id, activo")
-      .eq("dni", dni)
+      .eq('dni', dniNormalizado)
       .single();
 
     if (existe) {
@@ -362,7 +362,7 @@ app.post("/aprobar-usuario", async (req, res) => {
     const { data: prof } = await supabase
       .from("profesionales")
       .select("nombre, apellido, email")
-      .eq("dni", dni)
+      .eq('dni', dniNormalizado)
       .single();
 
     if (!prof)
@@ -389,7 +389,7 @@ app.post("/aprobar-usuario", async (req, res) => {
         aprobado_por: "admin",
         observaciones,
       })
-      .eq("dni", dni);
+      .eq('dni', dniNormalizado)
 
     console.log(`✅ Usuario aprobado: ${usuario} / ${passwordTemporal}`);
     res.json({
@@ -628,6 +628,12 @@ app.post("/api/estudios-paciente", async (req, res) => {
   if (!dni)
     return res.status(400).json({ success: false, message: "DNI requerido." });
 
+  // Normalizar DNI: quitar letras del principio (F3075796 → 3075796, M12345 → 12345)
+  const dniNormalizado = dni
+    .toString()
+    .replace(/^[a-zA-Z]+/, "")
+    .trim();
+
   try {
     const estudiosEncontrados = [];
 
@@ -635,7 +641,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
     const { data: laboratorios } = await supabase
       .from("practicas_historicas")
       .select("*")
-      .eq("dni", dni)
+      .eq('dni', dniNormalizado)
       .eq("tipo_practica", "laboratorio")
       .order("fecha", { ascending: false });
 
@@ -704,7 +710,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
     const { data: odonto } = await supabase
       .from("odontologia_consultas")
       .select("*")
-      .eq("dni", dni)
+      .eq('dni', dniNormalizado)
       .order("created_at", { ascending: false });
 
     (odonto || []).forEach((o) => {
@@ -725,7 +731,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
     const { data: enfermeria } = await supabase
       .from("enfermeria_consultas")
       .select("*")
-      .eq("dni", dni)
+      .eq('dni', dniNormalizado)
       .order("created_at", { ascending: false });
 
     (enfermeria || []).forEach((e) => {
@@ -765,7 +771,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
     const { data: otrasHistoricas } = await supabase
       .from("practicas_historicas")
       .select("*")
-      .eq("dni", dni)
+      .eq('dni', dniNormalizado)
       .in("tipo_practica", tiposOtros)
       .order("fecha", { ascending: false });
 
@@ -826,7 +832,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
     const { data: practicasInd } = await supabase
       .from("practicas_autorizadas")
       .select("*")
-      .eq("dni", dni)
+      .eq('dni', dniNormalizado)
       .eq("estado", "REALIZADA")
       .order("fecha_carga", { ascending: false });
 
