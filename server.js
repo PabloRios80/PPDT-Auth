@@ -36,7 +36,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 
 // ── SOLICITAR ACCESO ──
-// ── SOLICITAR ACCESO ──
 app.post("/solicitar-acceso", async (req, res) => {
   if (req.body.tipo === "prestador_institucional") {
     return solicitarAccesoPrestador(req, res);
@@ -71,6 +70,7 @@ app.post("/solicitar-acceso", async (req, res) => {
       });
     }
 
+    const dniNormalizado = dni.toString().replace(/^[a-zA-Z]+/, '').trim();
     const { data: existe } = await supabase
       .from("profesionales")
       .select("id, activo")
@@ -358,7 +358,7 @@ app.post("/aprobar-usuario", async (req, res) => {
         .status(403)
         .json({ success: false, message: "No autorizado." });
     }
-
+    const dniNormalizado = dni.toString().replace(/^[a-zA-Z]+/, '').trim();
     const { data: prof } = await supabase
       .from("profesionales")
       .select("nombre, apellido, email")
