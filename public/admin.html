@@ -325,12 +325,12 @@
         const lista = document.getElementById("listaAprobados");
         lista.innerHTML = "";
 
-        const opcionesSedes =
+        const opcionesSedes = (sedeId) =>
           `<option value="">-- Sin sede --</option>` +
           sedes
             .map(
               (s) =>
-                `<option value="${s.id}">${s.nombre} (${s.ciudad})</option>`,
+                `<option value="${s.id}" ${s.id == sedeId ? "selected" : ""}>${s.nombre} (${s.ciudad})</option>`,
             )
             .join("");
 
@@ -352,7 +352,7 @@
                         <div class="flex items-center gap-1">
                             <select id="sede_${p.dni}" 
                                 class="text-xs border border-blue-300 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-400">
-                                ${opcionesSedes.replace(`value="${sedeActual}"`, `value="${sedeActual}" selected`)}
+                                ${opcionesSedes(sedeActual)}
                             </select>
                             <button onclick="asignarSede('${p.dni}')"
                                 class="px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-600 text-white hover:bg-blue-700">
