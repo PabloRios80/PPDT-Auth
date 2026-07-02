@@ -883,6 +883,38 @@ function mapearTipoPractica(desc) {
   return "Otro";
 }
 
+app.get('/sedes-dp', async (req, res) => {
+    const adminKey = req.headers['x-admin-key'];
+    if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ error: 'No autorizado' });
+    try {
+        const { data, error } = await supabase
+            .from('sedes_dp')
+            .select('*')
+            .eq('activo', true)
+            .order('ciudad');
+        if (error) throw error;
+        res.json({ sedes: data });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/asignar-sede', async (req, res) => {
+    const adminKey = req.headers['x-admin-key'];
+    if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ error: 'No autorizado' });
+    const { dni, id_sede_dp } = req.body;
+    try {
+        const { error } = await supabase
+            .from('profesionales')
+            .update({ id_sede_dp })
+            .eq('dni', dni);
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
 app.listen(PORT, () =>
   console.log(`PPDT-Auth corriendo en http://localhost:${PORT}`),
 );
