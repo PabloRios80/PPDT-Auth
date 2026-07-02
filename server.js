@@ -414,10 +414,12 @@ app.get("/solicitudes-pendientes", async (req, res) => {
     }
 
     const { data } = await supabase
-    .from("profesionales")
-    .select("dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp")
-    .eq("activo", true)
-    .order("fecha_alta", { ascending: false });
+      .from("profesionales")
+      .select(
+        "dni, nombre, apellido, profesion, email, telefono, matricula, universidad, fecha_solicitud",
+      )
+      .eq("activo", false)
+      .order("fecha_solicitud", { ascending: false });
 
     res.json({ success: true, solicitudes: data || [] });
   } catch (error) {
