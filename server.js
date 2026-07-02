@@ -70,11 +70,14 @@ app.post("/solicitar-acceso", async (req, res) => {
       });
     }
 
-    const dniNormalizado = dni.toString().replace(/^[a-zA-Z]+/, '').trim();
+    const dniNormalizado = dni
+      .toString()
+      .replace(/^[a-zA-Z]+/, "")
+      .trim();
     const { data: existe } = await supabase
       .from("profesionales")
       .select("id, activo")
-      .eq('dni', dniNormalizado)
+      .eq("dni", dniNormalizado)
       .single();
 
     if (existe) {
@@ -235,7 +238,6 @@ app.post("/login", async (req, res) => {
         message: "Usuario o contraseña incorrectos.",
       });
     }
-
     const token = jwt.sign(
       {
         id: profesional.id,
@@ -248,6 +250,7 @@ app.post("/login", async (req, res) => {
         profesion: esPrestador
           ? profesional.especialidad
           : profesional.profesion,
+        id_sede_dp: esPrestador ? null : profesional.id_sede_dp || null,
       },
       JWT_SECRET,
       { expiresIn: "8h" },
@@ -358,11 +361,14 @@ app.post("/aprobar-usuario", async (req, res) => {
         .status(403)
         .json({ success: false, message: "No autorizado." });
     }
-    const dniNormalizado = dni.toString().replace(/^[a-zA-Z]+/, '').trim();
+    const dniNormalizado = dni
+      .toString()
+      .replace(/^[a-zA-Z]+/, "")
+      .trim();
     const { data: prof } = await supabase
       .from("profesionales")
       .select("nombre, apellido, email")
-      .eq('dni', dniNormalizado)
+      .eq("dni", dniNormalizado)
       .single();
 
     if (!prof)
@@ -389,7 +395,7 @@ app.post("/aprobar-usuario", async (req, res) => {
         aprobado_por: "admin",
         observaciones,
       })
-      .eq('dni', dniNormalizado)
+      .eq("dni", dniNormalizado);
 
     console.log(`✅ Usuario aprobado: ${usuario} / ${passwordTemporal}`);
     res.json({
@@ -436,7 +442,9 @@ app.get("/usuarios-aprobados", async (req, res) => {
 
     const { data } = await supabase
       .from("profesionales")
-      .select("dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp")
+      .select(
+        "dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp",
+      )
       .eq("activo", true)
       .order("fecha_alta", { ascending: false });
 
@@ -641,7 +649,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
     const { data: laboratorios } = await supabase
       .from("practicas_historicas")
       .select("*")
-      .eq('dni', dniNormalizado)
+      .eq("dni", dniNormalizado)
       .eq("tipo_practica", "laboratorio")
       .order("fecha", { ascending: false });
 
@@ -710,7 +718,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
     const { data: odonto } = await supabase
       .from("odontologia_consultas")
       .select("*")
-      .eq('dni', dniNormalizado)
+      .eq("dni", dniNormalizado)
       .order("created_at", { ascending: false });
 
     (odonto || []).forEach((o) => {
@@ -731,7 +739,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
     const { data: enfermeria } = await supabase
       .from("enfermeria_consultas")
       .select("*")
-      .eq('dni', dniNormalizado)
+      .eq("dni", dniNormalizado)
       .order("created_at", { ascending: false });
 
     (enfermeria || []).forEach((e) => {
@@ -771,7 +779,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
     const { data: otrasHistoricas } = await supabase
       .from("practicas_historicas")
       .select("*")
-      .eq('dni', dniNormalizado)
+      .eq("dni", dniNormalizado)
       .in("tipo_practica", tiposOtros)
       .order("fecha", { ascending: false });
 
@@ -832,7 +840,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
     const { data: practicasInd } = await supabase
       .from("practicas_autorizadas")
       .select("*")
-      .eq('dni', dniNormalizado)
+      .eq("dni", dniNormalizado)
       .eq("estado", "REALIZADA")
       .order("fecha_carga", { ascending: false });
 
@@ -883,36 +891,38 @@ function mapearTipoPractica(desc) {
   return "Otro";
 }
 
-app.get('/sedes-dp', async (req, res) => {
-    const adminKey = req.headers['x-admin-key'];
-    if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ error: 'No autorizado' });
-    try {
-        const { data, error } = await supabase
-            .from('sedes_dp')
-            .select('*')
-            .eq('activo', true)
-            .order('ciudad');
-        if (error) throw error;
-        res.json({ sedes: data });
-    } catch (e) {
-        res.status(500).json({ error: e.message });
-    }
+app.get("/sedes-dp", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+  if (adminKey !== process.env.ADMIN_KEY)
+    return res.status(403).json({ error: "No autorizado" });
+  try {
+    const { data, error } = await supabase
+      .from("sedes_dp")
+      .select("*")
+      .eq("activo", true)
+      .order("ciudad");
+    if (error) throw error;
+    res.json({ sedes: data });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-app.post('/asignar-sede', async (req, res) => {
-    const adminKey = req.headers['x-admin-key'];
-    if (adminKey !== process.env.ADMIN_KEY) return res.status(403).json({ error: 'No autorizado' });
-    const { dni, id_sede_dp } = req.body;
-    try {
-        const { error } = await supabase
-            .from('profesionales')
-            .update({ id_sede_dp })
-            .eq('dni', dni);
-        if (error) throw error;
-        res.json({ success: true });
-    } catch (e) {
-        res.status(500).json({ success: false, message: e.message });
-    }
+app.post("/asignar-sede", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+  if (adminKey !== process.env.ADMIN_KEY)
+    return res.status(403).json({ error: "No autorizado" });
+  const { dni, id_sede_dp } = req.body;
+  try {
+    const { error } = await supabase
+      .from("profesionales")
+      .update({ id_sede_dp })
+      .eq("dni", dni);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
 });
 
 app.listen(PORT, () =>
