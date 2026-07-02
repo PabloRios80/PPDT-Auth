@@ -436,7 +436,7 @@ app.get("/usuarios-aprobados", async (req, res) => {
 
     const { data } = await supabase
       .from("profesionales")
-      .select("dni, nombre, apellido, profesion, usuario, rol, fecha_alta")
+      .select("dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp")
       .eq("activo", true)
       .order("fecha_alta", { ascending: false });
 
