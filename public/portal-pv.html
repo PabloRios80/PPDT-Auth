@@ -130,7 +130,7 @@
         const token = localStorage.getItem('dpToken');
         const payload = window.dpPayload;
 
-        // Mostrar nombre
+        // Mostrar nombredocument.getElementById('btn-consultas')
         if (payload) {
             document.getElementById('nombreUsuario').textContent = 
                 `${payload.nombre || ''} ${payload.apellido || ''}`.trim();
@@ -142,7 +142,7 @@
         document.getElementById('btn-agenda').href = `https://preventivistas.diapreventivoiapos.com?token=${t}`;
         document.getElementById('btn-crm').href = `https://preventivistas-crm.onrender.com?token=${t}`;
         document.getElementById('btn-practicas').href = `https://prestadores.diapreventivoiapos.com?token=${t}`;
-        document.getElementById('btn-consultas').href = `https://cierre.diapreventivoiapos.com?token=${t}`;
+        document.getElementById('btn-consultas').href = `https://acceso.diapreventivoiapos.com/consulta-afiliado.html?token=${t}`;
     });
 
     function cerrarSesion() {

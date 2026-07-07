@@ -925,6 +925,108 @@ app.post("/asignar-sede", async (req, res) => {
   }
 });
 
+// Verificar afiliado IAPOS
+app.get('/verificar-afiliado/:dni', async (req, res) => {
+    const dni = req.params.dni;
+    const hoy = new Date().toISOString().split('T')[0];
+    const soapBody = `<?xml version="1.0" encoding="utf-8"?>
+    <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+        <soap:Body>
+            <BEWsValidaAfi.Execute xmlns="IAPOS_WS">
+                <Usuario>CONSULTAPDP</Usuario>
+                <Passwd>1Qaz</Passwd>
+                <Nafiliado>${dni}</Nafiliado>
+                <Badocnumdo>${dni}</Badocnumdo>
+                <Tidocodigo_de_documento>96</Tidocodigo_de_documento>
+                <Ogorcodigo>1</Ogorcodigo>
+                <Fechpresta>${hoy}</Fechpresta>
+            </BEWsValidaAfi.Execute>
+        </soap:Body>
+    </soap:Envelope>`;
+    try {
+        const response = await axios.post(
+            'https://aswe.santafe.gov.ar/iapos-sw-srvt/servlet/abewsvalidaafi',
+            soapBody,
+            { headers: { 'Content-Type': 'text/xml; charset=utf-8', 'SOAPAction': 'IAPOS_WSaction/ABEWSVALIDAAFI.Execute' }, timeout: 10000 }
+        );
+        const xml = response.data;
+        const get = (tag) => { const m = xml.match(new RegExp(`<${tag}[^>]*>([^<]*)<\/${tag}>`)); return m ? m[1].trim() : null; };
+        res.json({ esActivo: get('Estado') === 'A', estado: get('Estado'), nombre: get('Apenom'), edad: get('Edad'), sexo: get('Sexo'), localidad: get('Localidad'), mensaje: get('Msgdsc') });
+    } catch(e) {
+        res.status(500).json({ esActivo: false, error: e.message });
+    }
+});
+
+// Prácticas pendientes por DNI
+app.get('/api/practicas-pendientes/:dni', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) return res.status(401).json({ success: false });
+        jwt.verify(token, JWT_SECRET);
+        const { data } = await supabase
+            .from('practicas_autorizadas')
+            .select('descripcion_practica, codigo_prestacion')
+            .eq('dni', req.params.dni)
+            .eq('estado', 'AUTORIZADA');
+        res.json({ success: true, practicas: data || [] });
+    } catch(e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+// Turnos externos por DNI
+app.get('/api/turnos-externos-afiliado/:dni', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) return res.status(401).json({ success: false });
+        jwt.verify(token, JWT_SECRET);
+        const { data } = await supabase
+            .from('turnos_prestadores_externos')
+            .select('practica, nombre_prestador, fecha_turno, hora_turno, estado')
+            .eq('dni', req.params.dni)
+            .order('created_at', { ascending: false });
+        res.json({ success: true, turnos: data || [] });
+    } catch(e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+// Derivaciones por DNI
+app.get('/api/derivaciones-afiliado/:dni', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) return res.status(401).json({ success: false });
+        jwt.verify(token, JWT_SECRET);
+        const { data } = await supabase
+            .from('derivaciones')
+            .select('especialidad, motivo, estado, fecha_seguimiento')
+            .eq('dni', req.params.dni)
+            .order('fecha_derivacion', { ascending: false });
+        res.json({ success: true, derivaciones: data || [] });
+    } catch(e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+// Último DP por DNI
+app.get('/api/ultimo-dp/:dni', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.replace('Bearer ', '');
+        if (!token) return res.status(401).json({ success: false });
+        jwt.verify(token, JWT_SECRET);
+        const { data } = await supabase
+            .from('historial_dia_preventivo')
+            .select('fechax, efector, tipo')
+            .eq('dni', req.params.dni)
+            .order('fechax', { ascending: false })
+            .limit(1)
+            .single();
+        res.json({ success: true, ultimoDP: data || null });
+    } catch(e) {
+        res.json({ success: true, ultimoDP: null });
+    }
+});
+
 app.listen(PORT, () =>
   console.log(`PPDT-Auth corriendo en http://localhost:${PORT}`),
 );
