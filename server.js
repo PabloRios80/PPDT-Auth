@@ -385,7 +385,6 @@ app.post("/aprobar-usuario", async (req, res) => {
       prof.apellido.toLowerCase().replace(/\s/g, "") + dni.slice(-4);
     const passwordTemporal = Math.random().toString(36).slice(-8).toUpperCase();
     const passwordHash = await bcrypt.hash(passwordTemporal, 10);
-
     await supabase
       .from("profesionales")
       .update({
@@ -398,6 +397,8 @@ app.post("/aprobar-usuario", async (req, res) => {
         fecha_alta: new Date().toISOString(),
         aprobado_por: "admin",
         observaciones,
+        puede_cerrar_interno: req.body.puede_cerrar_interno === true,
+        puede_derivar: req.body.puede_derivar === true,
       })
       .eq("dni", dniNormalizado);
 

@@ -212,6 +212,46 @@
             <option value="admin">Administrador</option>
           </select>
         </div>
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2"
+            >Permisos del portal profesional</label
+          >
+          <div class="space-y-2">
+            <label
+              class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100"
+            >
+              <input
+                type="checkbox"
+                id="modalPuedeCerrarInterno"
+                class="w-4 h-4 text-blue-600"
+              />
+              <div>
+                <p class="text-sm font-bold text-blue-900">Médico interno</p>
+                <p class="text-xs text-gray-500">
+                  Ve agenda de cierre DP del centro de salud
+                </p>
+              </div>
+            </label>
+            <label
+              class="flex items-center gap-3 p-3 bg-green-50 rounded-lg cursor-pointer hover:bg-green-100"
+            >
+              <input
+                type="checkbox"
+                id="modalPuedeErivar"
+                class="w-4 h-4 text-green-600"
+              />
+              <div>
+                <p class="text-sm font-bold text-green-900">
+                  Médico externo / derivador
+                </p>
+                <p class="text-xs text-gray-500">
+                  Puede derivar pacientes y ve cuando están listos para cerrar
+                </p>
+              </div>
+            </label>
+          </div>
+        </div>
+
         <div
           id="modalMsg"
           class="hidden mb-4 p-3 rounded-lg text-sm font-medium border"
@@ -473,7 +513,14 @@
             "Content-Type": "application/json",
             "x-admin-key": adminKey,
           },
-          body: JSON.stringify({ dni: dniAprobar, rol }),
+          body: JSON.stringify({
+            dni: dniAprobar,
+            rol,
+            puede_cerrar_interno: document.getElementById(
+              "modalPuedeCerrarInterno",
+            ).checked,
+            puede_derivar: document.getElementById("modalPuedeErivar").checked,
+          }),
         });
         const data = await res.json();
         if (data.success) {
