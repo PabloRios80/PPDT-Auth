@@ -1,155 +1,255 @@
 <!doctype html>
 <html lang="es">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Portal Preventivista — IAPOS</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
     <style>
-        body { font-family: 'Montserrat', sans-serif; }
-        .app-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 2rem;
-            border-radius: 1rem;
-            transition: transform 0.2s, box-shadow 0.2s;
-            min-height: 160px;
-            text-decoration: none;
-        }
-        .app-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
-        }
+      body {
+        font-family: "Montserrat", sans-serif;
+      }
+      .app-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+        border-radius: 1rem;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+        min-height: 160px;
+        text-decoration: none;
+      }
+      .app-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+      }
     </style>
     <script>
-    (function() {
+      (function () {
         const params = new URLSearchParams(window.location.search);
-        const tokenUrl = params.get('token');
+        const tokenUrl = params.get("token");
         if (tokenUrl) {
-            localStorage.setItem('dpToken', tokenUrl);
-            window.history.replaceState({}, '', window.location.pathname);
+          localStorage.setItem("dpToken", tokenUrl);
+          window.history.replaceState({}, "", window.location.pathname);
         }
-        const token = localStorage.getItem('dpToken');
+        const token = localStorage.getItem("dpToken");
         if (!token) {
-            window.location.href = '/login.html';
-            return;
+          window.location.href = "/login.html";
+          return;
         }
         try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            const ahora = Math.floor(Date.now() / 1000);
-            if (payload.exp && payload.exp < ahora) {
-                localStorage.removeItem('dpToken');
-                window.location.href = '/login.html';
-                return;
-            }
-            window.dpPayload = payload;
-        } catch(e) {
-            localStorage.removeItem('dpToken');
-            window.location.href = '/login.html';
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          const ahora = Math.floor(Date.now() / 1000);
+          if (payload.exp && payload.exp < ahora) {
+            localStorage.removeItem("dpToken");
+            window.location.href = "/login.html";
+            return;
+          }
+          window.dpPayload = payload;
+        } catch (e) {
+          localStorage.removeItem("dpToken");
+          window.location.href = "/login.html";
         }
-    })();
+      })();
     </script>
-</head>
-<body class="bg-gray-100 min-h-screen flex flex-col">
+  </head>
+  <body class="bg-gray-100 min-h-screen flex flex-col">
     <header style="background-color: #014189; padding: 0; margin: 0">
-        <div style="background-color: #014189; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; max-width: 1080px; margin: 0 auto;">
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <img src="images/logo_iapos.png" alt="Logo IAPOS" style="height: 50px; display: block" />
-                <div>
-                    <div style="font-family: 'Montserrat', sans-serif; font-size: 16px; font-weight: 700; color: #fff;">
-                        Portal del Preventivista
-                    </div>
-                    <div style="font-family: 'Montserrat', sans-serif; font-size: 11px; color: #00a8e7; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;">
-                        Día Preventivo IAPOS
-                    </div>
-                </div>
+      <div
+        style="
+          background-color: #014189;
+          padding: 12px 20px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          max-width: 1080px;
+          margin: 0 auto;
+        "
+      >
+        <div style="display: flex; align-items: center; gap: 16px">
+          <img
+            src="images/logo_iapos.png"
+            alt="Logo IAPOS"
+            style="height: 50px; display: block"
+          />
+          <div>
+            <div
+              style="
+                font-family: &quot;Montserrat&quot;, sans-serif;
+                font-size: 16px;
+                font-weight: 700;
+                color: #fff;
+              "
+            >
+              Portal del Preventivista
             </div>
-            <div style="display: flex; align-items: center; gap: 12px;">
-                <span id="nombreUsuario" style="color: #00a8e7; font-size: 13px; font-weight: 600;"></span>
-                <button onclick="cerrarSesion()" style="background: #dc2626; color: white; border: none; border-radius: 6px; padding: 6px 14px; font-size: 12px; font-weight: 700; cursor: pointer;">
-                    <i class="fas fa-sign-out-alt mr-1"></i>Salir
-                </button>
+            <div
+              style="
+                font-family: &quot;Montserrat&quot;, sans-serif;
+                font-size: 11px;
+                color: #00a8e7;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+              "
+            >
+              Día Preventivo IAPOS
             </div>
+          </div>
         </div>
-        <div style="background-color: #00a8e7; height: 4px"></div>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <span
+            id="nombreUsuario"
+            style="color: #00a8e7; font-size: 13px; font-weight: 600"
+          ></span>
+          <button
+            onclick="cerrarSesion()"
+            style="
+              background: #dc2626;
+              color: white;
+              border: none;
+              border-radius: 6px;
+              padding: 6px 14px;
+              font-size: 12px;
+              font-weight: 700;
+              cursor: pointer;
+            "
+          >
+            <i class="fas fa-sign-out-alt mr-1"></i>Salir
+          </button>
+        </div>
+      </div>
+      <div style="background-color: #00a8e7; height: 4px"></div>
     </header>
 
     <main class="flex-grow py-10">
-        <div style="max-width: 1080px; margin: 0 auto; padding: 0 16px;">
-            <h2 class="text-2xl font-bold text-center mb-2" style="color: #014189;">
-                ¿Qué vas a hacer hoy?
-            </h2>
-            <p class="text-center text-gray-500 text-sm mb-8">Seleccioná la herramienta que necesitás</p>
+      <div style="max-width: 1080px; margin: 0 auto; padding: 0 16px">
+        <h2 class="text-2xl font-bold text-center mb-2" style="color: #014189">
+          ¿Qué vas a hacer hoy?
+        </h2>
+        <p class="text-center text-gray-500 text-sm mb-8">
+          Seleccioná la herramienta que necesitás
+        </p>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <a id="btn-tablero" href="#" class="app-card bg-blue-700 text-white">
+            <i class="fas fa-clipboard-list text-4xl mb-3"></i>
+            <span class="font-bold text-lg">Tablero del Día</span>
+            <span class="text-blue-200 text-sm mt-1"
+              >Admisión y seguimiento en tiempo real</span
+            >
+          </a>
 
-                <a id="btn-tablero" href="#" class="app-card bg-blue-700 text-white">
-                    <i class="fas fa-clipboard-list text-4xl mb-3"></i>
-                    <span class="font-bold text-lg">Tablero del Día</span>
-                    <span class="text-blue-200 text-sm mt-1">Admisión y seguimiento en tiempo real</span>
-                </a>
+          <a
+            id="btn-agenda"
+            href="#"
+            class="app-card bg-yellow-500 text-gray-900"
+          >
+            <i class="fas fa-calendar-alt text-4xl mb-3"></i>
+            <span class="font-bold text-lg">Agenda y Turnos</span>
+            <span class="text-yellow-800 text-sm mt-1"
+              >Gestión de turnos, bloqueos y derivaciones</span
+            >
+          </a>
 
-                <a id="btn-agenda" href="#" class="app-card bg-yellow-500 text-gray-900">
-                    <i class="fas fa-calendar-alt text-4xl mb-3"></i>
-                    <span class="font-bold text-lg">Agenda y Turnos</span>
-                    <span class="text-yellow-800 text-sm mt-1">Gestión de turnos, bloqueos y derivaciones</span>
-                </a>
+          <a
+            id="btn-crm"
+            href="#"
+            class="app-card text-white"
+            style="background-color: #014189"
+          >
+            <i class="fas fa-chart-line text-4xl mb-3"></i>
+            <span class="font-bold text-lg">CRM Preventivistas</span>
+            <span class="text-blue-200 text-sm mt-1"
+              >Seguimiento, alertas y facturación</span
+            >
+          </a>
 
-                <a id="btn-crm" href="#" class="app-card text-white" style="background-color: #014189;">
-                    <i class="fas fa-chart-line text-4xl mb-3"></i>
-                    <span class="font-bold text-lg">CRM Preventivistas</span>
-                    <span class="text-blue-200 text-sm mt-1">Seguimiento, alertas y facturación</span>
-                </a>
+          <a
+            id="btn-practicas"
+            href="#"
+            class="app-card bg-purple-600 text-white"
+          >
+            <i class="fas fa-flask text-4xl mb-3"></i>
+            <span class="font-bold text-lg">Cargar Prácticas</span>
+            <span class="text-purple-200 text-sm mt-1"
+              >Portal de prestadores</span
+            >
+          </a>
 
-                <a id="btn-practicas" href="#" class="app-card bg-purple-600 text-white">
-                    <i class="fas fa-flask text-4xl mb-3"></i>
-                    <span class="font-bold text-lg">Cargar Prácticas</span>
-                    <span class="text-purple-200 text-sm mt-1">Portal de prestadores</span>
-                </a>
-
-                <a id="btn-consultas" href="#" class="app-card bg-green-600 text-white">
-                    <i class="fas fa-search text-4xl mb-3"></i>
-                    <span class="font-bold text-lg">Consulta de Afiliados</span>
-                    <span class="text-green-200 text-sm mt-1">Ver historial y estudios del paciente</span>
-                </a>
-
-            </div>
+          <a
+            id="btn-consultas"
+            href="#"
+            class="app-card bg-green-600 text-white"
+          >
+            <i class="fas fa-search text-4xl mb-3"></i>
+            <span class="font-bold text-lg">Consulta de Afiliados</span>
+            <span class="text-green-200 text-sm mt-1"
+              >Ver historial y estudios del paciente</span
+            >
+          </a>
         </div>
+      </div>
     </main>
 
     <footer class="text-center text-sm text-gray-500 py-4">
-        <p>&copy; 2025 IAPOS. Programa Día Preventivo de la Salud.</p>
+      <p>&copy; 2025 IAPOS. Programa Día Preventivo de la Salud.</p>
     </footer>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const token = localStorage.getItem('dpToken');
+      document.addEventListener("DOMContentLoaded", () => {
+        const token = localStorage.getItem("dpToken");
         const payload = window.dpPayload;
 
-        // Mostrar nombredocument.getElementById('btn-consultas')
         if (payload) {
-            document.getElementById('nombreUsuario').textContent = 
-                `${payload.nombre || ''} ${payload.apellido || ''}`.trim();
+        document.getElementById("nombreUsuario").textContent =
+            `${payload.nombre || ""} ${payload.apellido || ""}`.trim();
         }
 
         // Setear URLs con token
         const t = encodeURIComponent(token);
-        document.getElementById('btn-tablero').href = `https://tablero-dia.onrender.com?token=${t}`;
-        document.getElementById('btn-agenda').href = `https://preventivistas.diapreventivoiapos.com?token=${t}`;
-        document.getElementById('btn-crm').href = `https://preventivistas-crm.onrender.com?token=${t}`;
-        document.getElementById('btn-practicas').href = `https://prestadores.diapreventivoiapos.com?token=${t}`;
-        document.getElementById('btn-consultas').href = `https://acceso.diapreventivoiapos.com/consulta-afiliado.html?token=${t}`;
-    });
+        document.getElementById("btn-tablero").href =
+          `https://tablero-dia.onrender.com?token=${t}`;
+        document.getElementById("btn-agenda").href =
+          `https://preventivistas.diapreventivoiapos.com?token=${t}`;
+        document.getElementById("btn-crm").href =
+          `https://preventivistas-crm.onrender.com?token=${t}`;
+        document.getElementById("btn-practicas").href =
+          `https://prestadores.diapreventivoiapos.com?token=${t}`;
+        document.getElementById("btn-consultas").href =
+          `https://acceso.diapreventivoiapos.com/consulta-afiliado.html?token=${t}`;
 
-    function cerrarSesion() {
-        localStorage.removeItem('dpToken');
-        localStorage.removeItem('dpProfesional');
-        window.location.href = '/login.html';
-    }
+        // Ocultar accesos no autorizados para PV de sedes externas (ej. ATEM)
+        const SEDES_SOLO_PRACTICAS_Y_CONSULTAS = [2]; // ATEM
+        if (
+          payload &&
+          SEDES_SOLO_PRACTICAS_Y_CONSULTAS.includes(payload.id_sede_dp)
+        ) {
+          document.getElementById("btn-tablero").remove();
+          document.getElementById("btn-agenda").remove();
+          document.getElementById("btn-crm").remove();
+        }
+      });
+
+      function cerrarSesion() {
+        localStorage.removeItem("dpToken");
+        localStorage.removeItem("dpProfesional");
+        window.location.href = "/login.html";
+      }
     </script>
-</body>
+  </body>
 </html>
