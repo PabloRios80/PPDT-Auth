@@ -412,6 +412,101 @@
             </div>`;
         });
 
+        async function cargarSedesPrestadorMini(idPrestador) {
+          try {
+            const res = await fetch(`/prestador-sedes/${idPrestador}`, {
+              headers: { "x-admin-key": adminKey },
+            });
+            const data = await res.json();
+            const span = document.getElementById(
+              `sedes-prestador-${idPrestador}`,
+            );
+            if (!span) return;
+            const sedes = data.sedes || [];
+            span.textContent =
+              sedes.length > 0
+                ? "Sedes: " + sedes.map((s) => s.sedes_dp?.nombre).join(", ")
+                : "Sin sede asignada";
+          } catch (e) {}
+        }
+
+        let prestadorSedesActual = null;
+
+        async function abrirGestionSedesPrestador(idPrestador, nombre) {
+          prestadorSedesActual = idPrestador;
+          document.getElementById("gsp-nombre").textContent = nombre;
+          document.getElementById("modal-gestion-sedes").style.display = "flex";
+          await cargarSedesDisponiblesGSP();
+          await cargarSedesAsignadasGSP();
+        }
+
+        function cerrarGestionSedes() {
+          document.getElementById("modal-gestion-sedes").style.display = "none";
+          cargarSedesPrestadorMini(prestadorSedesActual);
+        }
+
+        async function cargarSedesDisponiblesGSP() {
+          const res = await fetch("/sedes-dp", {
+            headers: { "x-admin-key": adminKey },
+          });
+          const data = await res.json();
+          const select = document.getElementById("gsp-select-sede");
+          select.innerHTML =
+            '<option value="">— Seleccioná sede —</option>' +
+            (data.sedes || [])
+              .map(
+                (s) =>
+                  `<option value="${s.id}">${s.nombre} (${s.ciudad})</option>`,
+              )
+              .join("");
+        }
+
+        async function cargarSedesAsignadasGSP() {
+          const res = await fetch(`/prestador-sedes/${prestadorSedesActual}`, {
+            headers: { "x-admin-key": adminKey },
+          });
+          const data = await res.json();
+          const lista = document.getElementById("gsp-lista-sedes");
+          const sedes = data.sedes || [];
+          lista.innerHTML =
+            sedes.length === 0
+              ? '<p style="color:#999; font-style:italic;">Sin sedes asignadas.</p>'
+              : sedes
+                  .map(
+                    (s) => `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:8px; background:#f0f7ff; border-radius:6px; margin-bottom:6px;">
+        <span>${s.sedes_dp?.nombre} (${s.sedes_dp?.ciudad})</span>
+        <button onclick="quitarSedeGSP(${s.id})" style="background:#dc3545; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:0.8em;">Quitar</button>
+      </div>`,
+                  )
+                  .join("");
+        }
+
+        async function agregarSedeGSP() {
+          const idSede = document.getElementById("gsp-select-sede").value;
+          if (!idSede) return alert("Seleccioná una sede.");
+          await fetch("/prestador-sedes", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-admin-key": adminKey,
+            },
+            body: JSON.stringify({
+              id_prestador: prestadorSedesActual,
+              id_sede_dp: parseInt(idSede),
+            }),
+          });
+          cargarSedesAsignadasGSP();
+        }
+
+        async function quitarSedeGSP(id) {
+          await fetch(`/prestador-sedes/${id}`, {
+            method: "DELETE",
+            headers: { "x-admin-key": adminKey },
+          });
+          cargarSedesAsignadasGSP();
+        }
+
         (dataPrest.prestadores || []).forEach((p) => {
           const fecha = p.fecha_alta
             ? new Date(p.fecha_alta).toLocaleDateString("es-AR")
@@ -435,6 +530,7 @@
                     </button>
                 </div>
             </div>`;
+          cargarSedesPrestadorMini(p.id);
         });
       }
 
@@ -755,6 +851,132 @@
           alert("Error: " + data.message);
         }
       }
+
+      // Sedes de un prestador
+      app.get("/prestador-sedes/:id_prestador", async (req, res) => {
+        const adminKey = req.headers["x-admin-key"];
+        if (adminKey !== process.env.ADMIN_KEY)
+          return res.status(403).json({ success: false });
+        try {
+          const { data, error } = await supabase
+            .from("prestador_sedes")
+            .select("id, id_sede_dp, sedes_dp(nombre, ciudad)")
+            .eq("id_prestador", req.params.id_prestador);
+          if (error) throw error;
+          res.json({ success: true, sedes: data || [] });
+        } catch (e) {
+          res.status(500).json({ success: false, message: e.message });
+        }
+      });
+
+      // Asignar una sede a un prestador
+      app.post("/prestador-sedes", async (req, res) => {
+        const adminKey = req.headers["x-admin-key"];
+        if (adminKey !== process.env.ADMIN_KEY)
+          return res.status(403).json({ success: false });
+        const { id_prestador, id_sede_dp } = req.body;
+        try {
+          const { error } = await supabase
+            .from("prestador_sedes")
+            .insert({ id_prestador, id_sede_dp });
+          if (error) throw error;
+          res.json({ success: true });
+        } catch (e) {
+          res.status(500).json({ success: false, message: e.message });
+        }
+      });
+
+      // Quitar una sede de un prestador
+      app.delete("/prestador-sedes/:id", async (req, res) => {
+        const adminKey = req.headers["x-admin-key"];
+        if (adminKey !== process.env.ADMIN_KEY)
+          return res.status(403).json({ success: false });
+        try {
+          await supabase
+            .from("prestador_sedes")
+            .delete()
+            .eq("id", req.params.id);
+          res.json({ success: true });
+        } catch (e) {
+          res.status(500).json({ success: false, message: e.message });
+        }
+      });
     </script>
+    <div
+      id="modal-gestion-sedes"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      "
+    >
+      <div
+        style="
+          background: white;
+          border-radius: 10px;
+          padding: 24px;
+          max-width: 420px;
+          width: 100%;
+        "
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+          "
+        >
+          <h3 style="color: #014189; margin: 0">
+            Sedes de <span id="gsp-nombre"></span>
+          </h3>
+          <button
+            onclick="cerrarGestionSedes()"
+            style="
+              background: none;
+              border: none;
+              font-size: 1.3em;
+              cursor: pointer;
+              color: #666;
+            "
+          >
+            ✕
+          </button>
+        </div>
+        <div id="gsp-lista-sedes" style="margin-bottom: 16px"></div>
+        <div style="display: flex; gap: 8px">
+          <select
+            id="gsp-select-sede"
+            style="
+              flex: 1;
+              padding: 8px;
+              border-radius: 5px;
+              border: 1px solid #ccc;
+            "
+          >
+            <option value="">Cargando...</option>
+          </select>
+          <button
+            onclick="agregarSedeGSP()"
+            style="
+              background: #009a44;
+              color: white;
+              border: none;
+              padding: 8px 14px;
+              border-radius: 5px;
+              cursor: pointer;
+              font-weight: bold;
+            "
+          >
+            + Agregar
+          </button>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
