@@ -273,7 +273,7 @@ app.post("/login", async (req, res) => {
         profesion: esPrestador
           ? profesional.especialidad
           : profesional.profesion,
-          id_sede_dp: esPrestador ? null : profesional.id_sede_dp || null,
+        id_sede_dp: esPrestador ? null : profesional.id_sede_dp || null,
       },
     });
   } catch (error) {
@@ -1049,7 +1049,52 @@ app.get("/api/ultimo-dp/:dni", async (req, res) => {
     res.json({ success: true, ultimoDP: null });
   }
 });
+// Sedes de un prestador
+app.get("/prestador-sedes/:id_prestador", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+  if (adminKey !== process.env.ADMIN_KEY)
+    return res.status(403).json({ success: false });
+  try {
+    const { data, error } = await supabase
+      .from("prestador_sedes")
+      .select("id, id_sede_dp, sedes_dp(nombre, ciudad)")
+      .eq("id_prestador", req.params.id_prestador);
+    if (error) throw error;
+    res.json({ success: true, sedes: data || [] });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
 
+// Asignar una sede a un prestador
+app.post("/prestador-sedes", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+  if (adminKey !== process.env.ADMIN_KEY)
+    return res.status(403).json({ success: false });
+  const { id_prestador, id_sede_dp } = req.body;
+  try {
+    const { error } = await supabase
+      .from("prestador_sedes")
+      .insert({ id_prestador, id_sede_dp });
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+// Quitar una sede de un prestador
+app.delete("/prestador-sedes/:id", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+  if (adminKey !== process.env.ADMIN_KEY)
+    return res.status(403).json({ success: false });
+  try {
+    await supabase.from("prestador_sedes").delete().eq("id", req.params.id);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
 app.listen(PORT, () =>
   console.log(`PPDT-Auth corriendo en http://localhost:${PORT}`),
 );
