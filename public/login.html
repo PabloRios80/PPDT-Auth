@@ -211,9 +211,12 @@
         prestadores: "https://prestadores.diapreventivoiapos.com",
       };
       const REDIRECCION_POR_ROL = {
-        medico: "https://derivaciones.diapreventivoiapos.com/portal-profesional.html",
-        profesional: "https://derivaciones.diapreventivoiapos.com/portal-profesional.html",
-        enfermera: "https://enfermeria.diapreventivoiapos.com/formulario-enfermeria.html",
+        medico:
+          "https://derivaciones.diapreventivoiapos.com/portal-profesional.html",
+        profesional:
+          "https://derivaciones.diapreventivoiapos.com/portal-profesional.html",
+        enfermera:
+          "https://enfermeria.diapreventivoiapos.com/formulario-enfermeria.html",
         bioquimico: "https://prestadores.diapreventivoiapos.com",
         odontologo: "https://odontologia.diapreventivoiapos.com",
         preventivista: "https://acceso.diapreventivoiapos.com/portal-pv.html",
@@ -275,11 +278,21 @@
           } else {
             // Redirigir según rol/profesion (con posible override por ?redirect=)
             const prof = data.profesional;
-            const url =
-              REDIRECCION_OVERRIDE[redirect] ||
-              REDIRECCION_POR_ROL[prof.profesion] ||
-              REDIRECCION_POR_ROL[prof.rol] ||
-              "/";
+            const SEDES_DIRECTO_INDEX_MEDICO = [2]; // ATEM
+
+            let url;
+            if (
+              prof.profesion === "medico" &&
+              SEDES_DIRECTO_INDEX_MEDICO.includes(prof.id_sede_dp)
+            ) {
+              url = "https://cierre.diapreventivoiapos.com/index-medico.html";
+            } else {
+              url =
+                REDIRECCION_OVERRIDE[redirect] ||
+                REDIRECCION_POR_ROL[prof.profesion] ||
+                REDIRECCION_POR_ROL[prof.rol] ||
+                "/";
+            }
             window.location.href = url + "?token=" + data.token;
           }
         } catch (e) {

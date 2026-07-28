@@ -273,6 +273,7 @@ app.post("/login", async (req, res) => {
         profesion: esPrestador
           ? profesional.especialidad
           : profesional.profesion,
+          id_sede_dp: esPrestador ? null : profesional.id_sede_dp || null,
       },
     });
   } catch (error) {
