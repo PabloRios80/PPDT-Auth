@@ -438,37 +438,7 @@
       </div>`;
         });
 
-        (dataPrest.prestadores || []).forEach((p) => {
-          const fecha = p.fecha_alta
-            ? new Date(p.fecha_alta).toLocaleDateString("es-AR")
-            : "-";
-          lista.innerHTML += `
-      <div class="bg-white rounded-xl shadow p-4 border border-blue-50 flex justify-between items-center flex-wrap gap-2">
-          <div>
-              <p class="font-bold text-blue-900">${p.nombre_institucion}</p>
-              <p class="text-sm text-gray-500">${p.especialidad} · ${p.usuario}</p>
-              <p class="text-xs text-gray-400">Alta: ${fecha}</p>
-              <p class="text-xs text-indigo-600 font-bold mt-1" id="sedes-prestador-${p.id}">Cargando sedes...</p>
-          </div>
-          <div class="flex gap-2 items-center flex-wrap">
-              <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">Prestador</span>
-              <button onclick="abrirGestionSedesPrestador(${p.id}, '${p.nombre_institucion}')"
-                  class="px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-400 text-indigo-700 hover:bg-indigo-50">
-                  <i class="fas fa-map-marker-alt mr-1"></i>Sedes
-              </button>
-              <button onclick="desactivarPrestador(${p.id})"
-                  class="px-3 py-1.5 rounded-lg text-xs font-bold border border-yellow-400 text-yellow-700 hover:bg-yellow-50">
-                  <i class="fas fa-ban mr-1"></i>Desactivar
-              </button>
-              <button onclick="eliminarPrestador(${p.id})"
-                  class="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-300 text-red-600 hover:bg-red-50">
-                  <i class="fas fa-trash mr-1"></i>Eliminar
-              </button>
-          </div>
-      </div>`;
-          cargarSedesPrestadorMini(p.id);
-        });
-      }
+        }
 
       // ── GESTIÓN DE SEDES POR PRESTADOR (funciones globales) ──
       async function cargarSedesPrestadorMini(idPrestador) {
