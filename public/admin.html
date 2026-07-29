@@ -458,10 +458,15 @@
           );
           if (!span) return;
           const sedes = data.sedes || [];
-          span.textContent =
+          span.innerHTML =
             sedes.length > 0
-              ? "Sedes: " + sedes.map((s) => s.sedes_dp?.nombre).join(", ")
-              : "Sin sede asignada";
+              ? sedes
+                  .map(
+                    (s) =>
+                      `<span style="display:inline-block; background:#e0e7ff; color:#3730a3; padding:2px 8px; border-radius:12px; font-size:0.75em; font-weight:700; margin-right:4px; margin-top:4px;"><i class="fas fa-map-marker-alt" style="margin-right:3px;"></i>${s.sedes_dp?.nombre}</span>`,
+                  )
+                  .join("")
+              : '<span style="color:#9ca3af; font-style:italic;">Sin sede asignada</span>';
         } catch (e) {}
       }
 
@@ -905,14 +910,17 @@
           </button>
         </div>
         <div id="gsp-lista-sedes" style="margin-bottom: 16px"></div>
-        <div style="display: flex; gap: 8px">
+
+        <div style="display: flex; gap: 8px; flex-wrap: wrap">
           <select
             id="gsp-select-sede"
             style="
               flex: 1;
+              min-width: 180px;
               padding: 8px;
               border-radius: 5px;
               border: 1px solid #ccc;
+              box-sizing: border-box;
             "
           >
             <option value="">Cargando...</option>
@@ -927,6 +935,8 @@
               border-radius: 5px;
               cursor: pointer;
               font-weight: bold;
+              white-space: nowrap;
+              flex-shrink: 0;
             "
           >
             + Agregar
