@@ -234,7 +234,7 @@
           `https://acceso.diapreventivoiapos.com/consulta-afiliado.html?token=${t}`;
 
         // Ocultar accesos no autorizados para PV de sedes externas (ej. ATEM)
-        const SEDES_SOLO_PRACTICAS_Y_CONSULTAS = [2]; // ATEM
+        const SEDES_SOLO_PRACTICAS_Y_CONSULTAS = [2, 4, 6];
         if (
           payload &&
           SEDES_SOLO_PRACTICAS_Y_CONSULTAS.includes(payload.id_sede_dp)
