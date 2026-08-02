@@ -454,6 +454,7 @@
         "papanicolau",
         "oftalmologia",
         "espirometria",
+        "coordinacion_dp",
       ];
 
       function toggleTipoSolicitud() {
@@ -489,6 +490,26 @@
           }
         }
       }
+      async function cargarSedesPublico() {
+        const select = document.getElementById("prestador_id");
+        try {
+          const res = await fetch("/sedes-dp-publico");
+          const data = await res.json();
+          const sedes = data.sedes || [];
+          select.innerHTML =
+            '<option value="">Seleccioná el prestador</option>' +
+            sedes
+              .map(
+                (s) =>
+                  `<option value="${s.id}">${s.nombre} — ${s.ciudad}</option>`,
+              )
+              .join("");
+        } catch (e) {
+          select.innerHTML = '<option value="">Error al cargar sedes</option>';
+        }
+      }
+
+      document.addEventListener("DOMContentLoaded", cargarSedesPublico);
 
       document
         .getElementById("profesion")
@@ -697,27 +718,6 @@
             btn.innerHTML =
               '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
           }
-          async function cargarSedesPublico() {
-            const select = document.getElementById("prestador_id");
-            try {
-              const res = await fetch("/sedes-dp-publico");
-              const data = await res.json();
-              const sedes = data.sedes || [];
-              select.innerHTML =
-                '<option value="">Seleccioná el prestador</option>' +
-                sedes
-                  .map(
-                    (s) =>
-                      `<option value="${s.id}">${s.nombre} — ${s.ciudad}</option>`,
-                  )
-                  .join("");
-            } catch (e) {
-              select.innerHTML =
-                '<option value="">Error al cargar sedes</option>';
-            }
-          }
-
-          document.addEventListener("DOMContentLoaded", cargarSedesPublico);
         });
     </script>
   </body>
