@@ -205,6 +205,9 @@
                       <option value="papanicolau">Papanicolau</option>
                       <option value="oftalmologia">Oftalmología</option>
                       <option value="espirometria">Espirometría</option>
+                      <option value="coordinacion_dp">
+                        Coordinación DP (institución)
+                      </option>
                     </optgroup>
                   </select>
                 </div>
@@ -252,11 +255,7 @@
                     id="prestador_id"
                     class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
                   >
-                    <option value="">Seleccioná el prestador</option>
-                    <option value="1">IAPOS — Santa Fe</option>
-                    <option value="2">IAPOS — Rosario</option>
-                    <option value="3">IAPOS — Coronda</option>
-                    <option value="4">ATEM</option>
+                    <option value="">Cargando sedes...</option>
                   </select>
                 </div>
               </div>
@@ -446,7 +445,16 @@
     </footer>
 
     <script>
-    const PRESTADORES_INSTITUCIONALES = ['laboratorio','imagenes','gastro','densitometria','biopsias','papanicolau','oftalmologia','espirometria'];
+      const PRESTADORES_INSTITUCIONALES = [
+        "laboratorio",
+        "imagenes",
+        "gastro",
+        "densitometria",
+        "biopsias",
+        "papanicolau",
+        "oftalmologia",
+        "espirometria",
+      ];
 
       function toggleTipoSolicitud() {
         const profesion = document.getElementById("profesion").value;
@@ -689,6 +697,27 @@
             btn.innerHTML =
               '<i class="fas fa-paper-plane mr-2"></i>Enviar solicitud';
           }
+          async function cargarSedesPublico() {
+            const select = document.getElementById("prestador_id");
+            try {
+              const res = await fetch("/sedes-dp-publico");
+              const data = await res.json();
+              const sedes = data.sedes || [];
+              select.innerHTML =
+                '<option value="">Seleccioná el prestador</option>' +
+                sedes
+                  .map(
+                    (s) =>
+                      `<option value="${s.id}">${s.nombre} — ${s.ciudad}</option>`,
+                  )
+                  .join("");
+            } catch (e) {
+              select.innerHTML =
+                '<option value="">Error al cargar sedes</option>';
+            }
+          }
+
+          document.addEventListener("DOMContentLoaded", cargarSedesPublico);
         });
     </script>
   </body>

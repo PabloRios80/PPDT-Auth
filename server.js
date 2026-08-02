@@ -1082,6 +1082,20 @@ app.post("/prestador-sedes", async (req, res) => {
     res.status(500).json({ success: false, message: e.message });
   }
 });
+// Endpoint público de solo lectura (sin x-admin-key) para el formulario de solicitud de acceso
+app.get("/sedes-dp-publico", async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("sedes_dp")
+      .select("id, nombre, ciudad")
+      .eq("activo", true)
+      .order("nombre");
+    if (error) throw error;
+    res.json({ success: true, sedes: data || [] });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
 
 // Quitar una sede de un prestador
 app.delete("/prestador-sedes/:id", async (req, res) => {
