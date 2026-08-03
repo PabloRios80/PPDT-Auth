@@ -244,7 +244,7 @@ app.post("/login", async (req, res) => {
         usuario: profesional.usuario,
         nombre: esPrestador
           ? profesional.nombre_institucion
-          : `${profesional.profesion === "bioquimico" ? "Bioq." : ""} ${profesional.nombre} ${profesional.apellido}`.trim(),
+          : `${profesional.profesion === "bioquimico" ? "Bioq. " : ""}${profesional.nombre}`.trim(),
         apellido: esPrestador ? "" : profesional.apellido,
         rol: profesional.rol,
         profesion: esPrestador
