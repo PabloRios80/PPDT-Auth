@@ -432,6 +432,10 @@
                   class="px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-400 text-indigo-700 hover:bg-indigo-50">
                   <i class="fas fa-map-marker-alt mr-1"></i>Sedes
               </button>
+              <button onclick="abrirGestionPracticasPrestador(${p.id}, '${p.nombre_institucion}')"
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold border border-purple-400 text-purple-700 hover:bg-purple-50">
+                  <i class="fas fa-vial mr-1"></i>Prácticas
+              </button>
               <button onclick="desactivarPrestador(${p.id})"
                   class="px-3 py-1.5 rounded-lg text-xs font-bold border border-yellow-400 text-yellow-700 hover:bg-yellow-50">
                   <i class="fas fa-ban mr-1"></i>Desactivar
@@ -469,6 +473,78 @@
               : '<span style="color:#9ca3af; font-style:italic;">Sin sede asignada</span>';
         } catch (e) {}
       }
+
+      // ── GESTIÓN DE PRÁCTICAS POR PRESTADOR (funciones globales) ──
+      const CATALOGO_PRACTICAS = [
+        { valor: "laboratorio", label: "Prácticas Bioquímicas" },
+        { valor: "mamografia", label: "Mamografía" },
+        { valor: "ecografia_abdominal", label: "Ecografía Abdominal" },
+        { valor: "ecografia_mamaria", label: "Ecografía Mamaria" },
+        { valor: "densitometria", label: "Densitometría Ósea" },
+        { valor: "vcc", label: "Videocolonoscopía (VCC)" },
+        { valor: "biopsias", label: "Biopsia" },
+        { valor: "papanicolau", label: "Papanicolau" },
+        { valor: "oftalmologia", label: "Oftalmología" },
+        { valor: "espirometria", label: "Espirometría" },
+        { valor: "coordinacion_dp", label: "Coordinación DP" },
+      ];
+
+      let prestadorPracticasActual = null;
+
+      async function abrirGestionPracticasPrestador(idPrestador, nombre) {
+        prestadorPracticasActual = idPrestador;
+        document.getElementById("gpp-nombre").textContent = nombre;
+        document.getElementById("modal-gestion-practicas").style.display =
+          "flex";
+        await cargarPracticasGPP();
+      }
+
+      function cerrarGestionPracticas() {
+        document.getElementById("modal-gestion-practicas").style.display =
+          "none";
+      }
+
+      async function cargarPracticasGPP() {
+        const res = await fetch(
+          `/prestador-practicas/${prestadorPracticasActual}`,
+          { headers: { "x-admin-key": adminKey } },
+        );
+        const data = await res.json();
+        const asignadas = new Set((data.practicas || []).map((p) => p.practica));
+
+        const cont = document.getElementById("gpp-lista-practicas");
+        cont.innerHTML = CATALOGO_PRACTICAS.map(
+          (p) => `
+          <label style="display:flex; align-items:center; gap:8px; padding:8px; border-radius:6px; background:${asignadas.has(p.valor) ? "#f3e8ff" : "#f9fafb"}; margin-bottom:4px; cursor:pointer;">
+            <input type="checkbox" value="${p.valor}"
+              ${asignadas.has(p.valor) ? "checked" : ""}
+              onchange="togglePracticaGPP('${p.valor}', this.checked)">
+            <span>${p.label}</span>
+          </label>`,
+        ).join("");
+      }
+
+      async function togglePracticaGPP(practica, marcado) {
+        if (marcado) {
+          await fetch("/prestador-practicas", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-admin-key": adminKey,
+            },
+            body: JSON.stringify({
+              id_prestador: prestadorPracticasActual,
+              practica,
+            }),
+          });
+        } else {
+          await fetch(
+            `/prestador-practicas/${prestadorPracticasActual}/${practica}`,
+            { method: "DELETE", headers: { "x-admin-key": adminKey } },
+          );
+        }
+      }
+
 
       async function abrirGestionSedesPrestador(idPrestador, nombre) {
         prestadorSedesActual = idPrestador;
@@ -942,6 +1018,59 @@
             + Agregar
           </button>
         </div>
+      </div>
+    </div>
+
+    <div
+      id="modal-gestion-practicas"
+      style="
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      "
+    >
+      <div
+        style="
+          background: white;
+          border-radius: 10px;
+          padding: 24px;
+          max-width: 420px;
+          width: 100%;
+        "
+      >
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+          "
+        >
+          <h3 style="color: #014189; margin: 0">
+            Prácticas de <span id="gpp-nombre"></span>
+          </h3>
+          <button
+            onclick="cerrarGestionPracticas()"
+            style="
+              background: none;
+              border: none;
+              font-size: 1.3em;
+              cursor: pointer;
+              color: #666;
+            "
+          >
+            ✕
+          </button>
+        </div>
+        <p style="font-size: 0.85em; color: #666; margin-bottom: 12px;">
+          Tildá las prácticas que este prestador puede cargar.
+        </p>
+        <div id="gpp-lista-practicas"></div>
       </div>
     </div>
   </body>
