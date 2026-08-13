@@ -1112,6 +1112,56 @@ app.delete("/prestador-sedes/:id", async (req, res) => {
     res.status(500).json({ success: false, message: e.message });
   }
 });
+
+// ── PRÁCTICAS QUE PUEDE CARGAR CADA PRESTADOR INSTITUCIONAL ──
+app.get("/prestador-practicas/:id_prestador", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+  if (adminKey !== process.env.ADMIN_KEY)
+    return res.status(403).json({ success: false });
+  try {
+    const { data, error } = await supabase
+      .from("prestador_practicas")
+      .select("id, practica")
+      .eq("id_prestador", req.params.id_prestador);
+    if (error) throw error;
+    res.json({ success: true, practicas: data || [] });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.post("/prestador-practicas", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+  if (adminKey !== process.env.ADMIN_KEY)
+    return res.status(403).json({ success: false });
+  const { id_prestador, practica } = req.body;
+  try {
+    const { error } = await supabase
+      .from("prestador_practicas")
+      .insert({ id_prestador, practica });
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
+app.delete("/prestador-practicas/:id_prestador/:practica", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+  if (adminKey !== process.env.ADMIN_KEY)
+    return res.status(403).json({ success: false });
+  try {
+    await supabase
+      .from("prestador_practicas")
+      .delete()
+      .eq("id_prestador", req.params.id_prestador)
+      .eq("practica", req.params.practica);
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
+
 app.listen(PORT, () =>
   console.log(`PPDT-Auth corriendo en http://localhost:${PORT}`),
 );
