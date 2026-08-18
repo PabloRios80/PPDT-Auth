@@ -240,6 +240,10 @@
                 id="modalPuedeErivar"
                 class="w-4 h-4 text-green-600"
               />
+              <label style="display: block; margin-top: 8px">
+                <input type="checkbox" id="modalEsSuperuser" />
+                Super usuario (ve y gestiona todas las sedes)
+              </label>
               <div>
                 <p class="text-sm font-bold text-green-900">
                   Médico externo / derivador
@@ -510,7 +514,9 @@
           { headers: { "x-admin-key": adminKey } },
         );
         const data = await res.json();
-        const asignadas = new Set((data.practicas || []).map((p) => p.practica));
+        const asignadas = new Set(
+          (data.practicas || []).map((p) => p.practica),
+        );
 
         const cont = document.getElementById("gpp-lista-practicas");
         cont.innerHTML = CATALOGO_PRACTICAS.map(
@@ -544,7 +550,6 @@
           );
         }
       }
-
 
       async function abrirGestionSedesPrestador(idPrestador, nombre) {
         prestadorSedesActual = idPrestador;
@@ -703,6 +708,7 @@
               "modalPuedeCerrarInterno",
             ).checked,
             puede_derivar: document.getElementById("modalPuedeErivar").checked,
+            es_superuser: document.getElementById("modalEsSuperuser").checked,
           }),
         });
         const data = await res.json();
@@ -1067,7 +1073,7 @@
             ✕
           </button>
         </div>
-        <p style="font-size: 0.85em; color: #666; margin-bottom: 12px;">
+        <p style="font-size: 0.85em; color: #666; margin-bottom: 12px">
           Tildá las prácticas que este prestador puede cargar.
         </p>
         <div id="gpp-lista-practicas"></div>

@@ -257,6 +257,7 @@ app.post("/login", async (req, res) => {
           ? false
           : profesional.puede_cerrar_interno || false,
         puede_derivar: esPrestador ? false : profesional.puede_derivar || false,
+        es_superuser: esPrestador ? false : profesional.es_superuser || false,
       },
       JWT_SECRET,
       { expiresIn: "8h" },
@@ -276,6 +277,7 @@ app.post("/login", async (req, res) => {
           ? profesional.especialidad
           : profesional.profesion,
         id_sede_dp: esPrestador ? null : profesional.id_sede_dp || null,
+        es_superuser: esPrestador ? false : profesional.es_superuser || false,
       },
     });
   } catch (error) {
@@ -402,6 +404,7 @@ app.post("/aprobar-usuario", async (req, res) => {
         observaciones,
         puede_cerrar_interno: req.body.puede_cerrar_interno === true,
         puede_derivar: req.body.puede_derivar === true,
+        es_superuser: req.body.es_superuser === true,
       })
       .eq("dni", dniNormalizado);
 
@@ -932,7 +935,22 @@ app.post("/asignar-sede", async (req, res) => {
     res.status(500).json({ success: false, message: e.message });
   }
 });
-
+app.post("/asignar-superuser", async (req, res) => {
+  const adminKey = req.headers["x-admin-key"];
+  if (adminKey !== process.env.ADMIN_KEY)
+    return res.status(403).json({ error: "No autorizado" });
+  const { dni, es_superuser } = req.body;
+  try {
+    const { error } = await supabase
+      .from("profesionales")
+      .update({ es_superuser: !!es_superuser })
+      .eq("dni", dni);
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (e) {
+    res.status(500).json({ success: false, message: e.message });
+  }
+});
 // Verificar afiliado IAPOS
 app.get("/verificar-afiliado/:dni", async (req, res) => {
   const dni = req.params.dni;
