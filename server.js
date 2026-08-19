@@ -195,9 +195,9 @@ app.post("/login", async (req, res) => {
   try {
     const { usuario, password } = req.body;
 
-    // Buscar primero en profesionales
     let profesional = null;
-    let esPrestador = false;
+    let tipoUsuario = "profesional"; // "profesional" | "prestador" | "empleado"
+    let institucionPadre = null;
 
     const { data: prof } = await supabase
       .from("profesionales")
@@ -209,7 +209,6 @@ app.post("/login", async (req, res) => {
     if (prof) {
       profesional = prof;
     } else {
-      // Buscar en prestadores_institucionales
       const { data: prest } = await supabase
         .from("prestadores_institucionales")
         .select("*")
@@ -219,7 +218,25 @@ app.post("/login", async (req, res) => {
 
       if (prest) {
         profesional = prest;
-        esPrestador = true;
+        tipoUsuario = "prestador";
+      } else {
+        const { data: empleado } = await supabase
+          .from("prestadores_institucionales_usuarios")
+          .select("*")
+          .eq("usuario", usuario)
+          .eq("activo", true)
+          .single();
+
+        if (empleado) {
+          profesional = empleado;
+          tipoUsuario = "empleado";
+          const { data: institucion } = await supabase
+            .from("prestadores_institucionales")
+            .select("*")
+            .eq("id", empleado.id_prestador)
+            .single();
+          institucionPadre = institucion;
+        }
       }
     }
 
@@ -240,44 +257,69 @@ app.post("/login", async (req, res) => {
         message: "Usuario o contraseña incorrectos.",
       });
     }
-    const token = jwt.sign(
-      {
-        id: profesional.id,
-        usuario: profesional.usuario,
-        nombre: esPrestador
-          ? profesional.nombre_institucion
-          : `${profesional.profesion === "bioquimico" ? "Bioq. " : ""}${profesional.nombre}`.trim(),
-        apellido: esPrestador ? "" : profesional.apellido,
-        rol: profesional.rol,
-        profesion: esPrestador
-          ? profesional.especialidad
-          : profesional.profesion,
-        id_sede_dp: esPrestador ? null : profesional.id_sede_dp || null,
-        puede_cerrar_interno: esPrestador
+
+    const esPrestador = tipoUsuario === "prestador";
+    const esEmpleado = tipoUsuario === "empleado";
+
+    const nombreCompleto = esPrestador
+      ? profesional.nombre_institucion
+      : esEmpleado
+        ? `${profesional.nombre || ""} ${profesional.apellido || ""}`.trim()
+        : `${profesional.profesion === "bioquimico" ? "Bioq. " : ""}${profesional.nombre}`.trim();
+
+    const profesionValor = esPrestador
+      ? profesional.especialidad
+      : esEmpleado
+        ? institucionPadre?.especialidad || null
+        : profesional.profesion;
+
+    const idSedeValor = esPrestador ? null : profesional.id_sede_dp || null; // empleado ya trae su propio id_sede_dp
+
+    const tokenPayload = {
+      id: profesional.id,
+      usuario: profesional.usuario,
+      nombre: nombreCompleto,
+      apellido: esPrestador ? "" : profesional.apellido || "",
+      rol: profesional.rol || (esEmpleado ? "empleado_prestador" : null),
+      profesion: profesionValor,
+      id_sede_dp: idSedeValor,
+      puede_cerrar_interno:
+        esPrestador || esEmpleado
           ? false
           : profesional.puede_cerrar_interno || false,
-        puede_derivar: esPrestador ? false : profesional.puede_derivar || false,
-        es_superuser: esPrestador ? false : profesional.es_superuser || false,
-      },
-      JWT_SECRET,
-      { expiresIn: "8h" },
-    );
+      puede_derivar:
+        esPrestador || esEmpleado ? false : profesional.puede_derivar || false,
+      es_superuser:
+        esPrestador || esEmpleado ? false : profesional.es_superuser || false,
+      ve_tablero: profesional.ve_tablero ?? true,
+      ve_agenda: profesional.ve_agenda ?? true,
+      ve_crm: profesional.ve_crm ?? true,
+      ve_practicas: profesional.ve_practicas ?? true,
+      ve_consultas: profesional.ve_consultas ?? true,
+    };
+
+    if (esEmpleado) {
+      tokenPayload.id_prestador = profesional.id_prestador;
+    }
+
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "8h" });
 
     res.json({
       success: true,
       token,
       debe_cambiar_password: profesional.debe_cambiar_password,
       profesional: {
-        nombre: esPrestador
-          ? profesional.nombre_institucion
-          : `${profesional.profesion === "bioquimico" ? "Bioq." : ""} ${profesional.nombre} ${profesional.apellido}`.trim(),
-        apellido: esPrestador ? "" : profesional.apellido,
-        rol: profesional.rol,
-        profesion: esPrestador
-          ? profesional.especialidad
-          : profesional.profesion,
-        id_sede_dp: esPrestador ? null : profesional.id_sede_dp || null,
-        es_superuser: esPrestador ? false : profesional.es_superuser || false,
+        nombre: nombreCompleto,
+        apellido: esPrestador ? "" : profesional.apellido || "",
+        rol: tokenPayload.rol,
+        profesion: profesionValor,
+        id_sede_dp: idSedeValor,
+        es_superuser: tokenPayload.es_superuser,
+        ve_tablero: tokenPayload.ve_tablero,
+        ve_agenda: tokenPayload.ve_agenda,
+        ve_crm: tokenPayload.ve_crm,
+        ve_practicas: tokenPayload.ve_practicas,
+        ve_consultas: tokenPayload.ve_consultas,
       },
     });
   } catch (error) {
