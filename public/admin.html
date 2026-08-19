@@ -216,7 +216,7 @@
           <label class="block text-sm font-medium text-gray-700 mb-2"
             >Permisos del portal profesional</label
           >
-          <div class="space-y-2">
+          <div id="bloquePermisosProfesional" class="space-y-2 hidden">
             <label
               class="flex items-center gap-3 p-3 bg-blue-50 rounded-lg cursor-pointer hover:bg-blue-100"
             >
@@ -240,10 +240,6 @@
                 id="modalPuedeErivar"
                 class="w-4 h-4 text-green-600"
               />
-              <label style="display: block; margin-top: 8px">
-                <input type="checkbox" id="modalEsSuperuser" />
-                Super usuario (ve y gestiona todas las sedes)
-              </label>
               <div>
                 <p class="text-sm font-bold text-green-900">
                   Médico externo / derivador
@@ -254,6 +250,24 @@
               </div>
             </label>
           </div>
+        </div>
+
+        <div class="mb-4">
+          <label
+            class="flex items-center gap-3 p-3 bg-purple-50 rounded-lg cursor-pointer hover:bg-purple-100"
+          >
+            <input
+              type="checkbox"
+              id="modalEsSuperuser"
+              class="w-4 h-4 text-purple-600"
+            />
+            <div>
+              <p class="text-sm font-bold text-purple-900">Super usuario</p>
+              <p class="text-xs text-gray-500">
+                Ve y gestiona todas las sedes, no solo la asignada
+              </p>
+            </div>
+          </label>
         </div>
 
         <div
@@ -681,6 +695,12 @@
         document.getElementById("modalNombre").textContent = nombre;
         document.getElementById("modalMsg").classList.add("hidden");
         document.getElementById("modalAprobar").classList.remove("hidden");
+        document
+          .getElementById("bloquePermisosProfesional")
+          .classList.toggle(
+            "hidden",
+            document.getElementById("modalRol").value !== "profesional",
+          );
       }
 
       function cerrarModal() {
@@ -944,6 +964,10 @@
           alert("Error: " + data.message);
         }
       }
+      document.getElementById("modalRol").addEventListener("change", (e) => {
+        const bloque = document.getElementById("bloquePermisosProfesional");
+        bloque.classList.toggle("hidden", e.target.value !== "profesional");
+      });
     </script>
     <div
       id="modal-gestion-sedes"
