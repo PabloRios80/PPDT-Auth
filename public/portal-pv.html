@@ -216,7 +216,7 @@
         const payload = window.dpPayload;
 
         if (payload) {
-        document.getElementById("nombreUsuario").textContent =
+          document.getElementById("nombreUsuario").textContent =
             `${payload.nombre || ""} ${payload.apellido || ""}`.trim();
         }
 
@@ -233,15 +233,17 @@
         document.getElementById("btn-consultas").href =
           `https://acceso.diapreventivoiapos.com/consulta-afiliado.html?token=${t}`;
 
-        // Ocultar accesos no autorizados para PV de sedes externas (ej. ATEM)
-        const SEDES_SOLO_PRACTICAS_Y_CONSULTAS = [2, 4, 6];
-        if (
-          payload &&
-          SEDES_SOLO_PRACTICAS_Y_CONSULTAS.includes(payload.id_sede_dp)
-        ) {
-          document.getElementById("btn-tablero").remove();
-          document.getElementById("btn-agenda").remove();
-          document.getElementById("btn-crm").remove();
+        if (payload) {
+          if (payload.ve_tablero === false)
+            document.getElementById("btn-tablero")?.remove();
+          if (payload.ve_agenda === false)
+            document.getElementById("btn-agenda")?.remove();
+          if (payload.ve_crm === false)
+            document.getElementById("btn-crm")?.remove();
+          if (payload.ve_practicas === false)
+            document.getElementById("btn-practicas")?.remove();
+          if (payload.ve_consultas === false)
+            document.getElementById("btn-consultas")?.remove();
         }
       });
 
