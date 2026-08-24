@@ -447,6 +447,11 @@ app.post("/aprobar-usuario", async (req, res) => {
         puede_cerrar_interno: req.body.puede_cerrar_interno === true,
         puede_derivar: req.body.puede_derivar === true,
         es_superuser: req.body.es_superuser === true,
+        ve_tablero: req.body.ve_tablero !== false,
+        ve_agenda: req.body.ve_agenda !== false,
+        ve_crm: req.body.ve_crm !== false,
+        ve_practicas: req.body.ve_practicas !== false,
+        ve_consultas: req.body.ve_consultas !== false,
       })
       .eq("dni", dniNormalizado);
 

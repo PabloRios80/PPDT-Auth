@@ -251,7 +251,27 @@
             </label>
           </div>
         </div>
-
+        <div id="bloquePermisosPV" class="hidden mb-4">
+          <p class="text-xs font-bold text-gray-600 mb-2">
+            Funciones visibles para este PV:
+          </p>
+          <label class="flex items-center gap-2 text-sm mb-1">
+            <input type="checkbox" id="veTablero" checked /> Tablero del Día
+          </label>
+          <label class="flex items-center gap-2 text-sm mb-1">
+            <input type="checkbox" id="veAgenda" checked /> Agenda y Turnos
+          </label>
+          <label class="flex items-center gap-2 text-sm mb-1">
+            <input type="checkbox" id="veCrm" checked /> CRM Preventivistas
+          </label>
+          <label class="flex items-center gap-2 text-sm mb-1">
+            <input type="checkbox" id="vePracticas" checked /> Cargar Prácticas
+          </label>
+          <label class="flex items-center gap-2 text-sm mb-1">
+            <input type="checkbox" id="veConsultas" checked /> Consulta de
+            Afiliados
+          </label>
+        </div>
         <div class="mb-4">
           <label
             class="flex items-center gap-3 p-3 bg-purple-50 rounded-lg cursor-pointer hover:bg-purple-100"
@@ -700,6 +720,12 @@
           .classList.toggle(
             "hidden",
             document.getElementById("modalRol").value !== "profesional",
+            document
+              .getElementById("bloquePermisosPV")
+              .classList.toggle(
+                "hidden",
+                document.getElementById("modalRol").value !== "preventivista",
+              ),
           );
       }
 
@@ -729,6 +755,11 @@
             ).checked,
             puede_derivar: document.getElementById("modalPuedeErivar").checked,
             es_superuser: document.getElementById("modalEsSuperuser").checked,
+            ve_tablero: document.getElementById("veTablero").checked,
+            ve_agenda: document.getElementById("veAgenda").checked,
+            ve_crm: document.getElementById("veCrm").checked,
+            ve_practicas: document.getElementById("vePracticas").checked,
+            ve_consultas: document.getElementById("veConsultas").checked,
           }),
         });
         const data = await res.json();
@@ -967,6 +998,9 @@
       document.getElementById("modalRol").addEventListener("change", (e) => {
         const bloque = document.getElementById("bloquePermisosProfesional");
         bloque.classList.toggle("hidden", e.target.value !== "profesional");
+        document
+          .getElementById("bloquePermisosPV")
+          .classList.toggle("hidden", e.target.value !== "preventivista");
       });
     </script>
     <div
