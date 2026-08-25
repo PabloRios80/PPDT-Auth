@@ -222,6 +222,25 @@ function renderTarjetaAfiliado(iapos, dni) {
     }
 }
 
+function etiquetaSiNo(valor) {
+    if (valor === 'si') return { texto: 'Sí', clase: 'bg-red-50 text-red-700' };
+    if (valor === 'no') return { texto: 'No', clase: 'bg-gray-50 text-gray-400' };
+    if (valor === 'no_sabe') return { texto: 'No sabe', clase: 'bg-yellow-50 text-yellow-700' };
+    if (valor === 'No aplica') return { texto: 'No aplica', clase: 'bg-gray-50 text-gray-400' };
+    return { texto: 'Sin dato', clase: 'bg-gray-50 text-gray-300' };
+}
+
+function etiquetaFuma(valor) {
+    const mapa = {
+        nunca: { texto: 'Nunca fumó', clase: 'bg-gray-50 text-gray-400' },
+        ex_fumador: { texto: 'Ex fumador', clase: 'bg-yellow-50 text-yellow-700' },
+        menos_de_10: { texto: 'Sí, <10/día', clase: 'bg-red-50 text-red-700' },
+        entre_10_y_20: { texto: 'Sí, 10-20/día', clase: 'bg-red-50 text-red-700' },
+        mas_de_20: { texto: 'Sí, +20/día', clase: 'bg-red-50 text-red-700' },
+    };
+    return mapa[valor] || { texto: 'Sin dato', clase: 'bg-gray-50 text-gray-300' };
+}
+
 function renderHojaDeVida(data) {
     const el = document.getElementById('tarjetaHojaDeVida');
     const hv = data.hojaDeVida;
@@ -239,27 +258,27 @@ function renderHojaDeVida(data) {
         : '';
 
     const factores = [
-        ['Hipertensión', hv.hipertension],
-        ['Diabetes', hv.diabetes],
-        ['Colesterol', hv.colesterol],
-        ['Depresión', hv.depresion],
-        ['Sedentarismo', hv.sedentarismo],
-        ['Abuso alcohol/drogas', hv.abuso_alcohol_drogas],
-        ['Estrés', hv.stress],
-        ['Exceso preocupación por la salud', hv.exceso_preocupacion_salud],
-        ['Exceso de pantalla', hv.exceso_pantalla],
-        ['Fuma', hv.fuma],
-        ['Fumador crónico', hv.fumador_cronico],
-        ['Hipertensión familiar', hv.hipertension_familiar],
-        ['Diabetes familiar', hv.diabetes_familiar],
-        ['Adicciones familiar', hv.adicciones_familiar],
-        ['Obesidad familiar', hv.obesidad_familiar],
-        ['Depresión familiar', hv.depresion_familiar],
-        ['Violencia familiar', hv.violencia_familiar],
-        ['Antecedente cáncer de colon', hv.cancer_de_colon],
-        ['Antecedente cáncer de mama', hv.cancer_de_mama],
-        ['Antecedente cáncer cuello uterino', hv.cancer_cuello_utero],
-        ['Antecedente cáncer de próstata', hv.cancer_de_prostata],
+        ['Hipertensión', etiquetaSiNo(hv.hipertension)],
+        ['Diabetes', etiquetaSiNo(hv.diabetes)],
+        ['Colesterol', etiquetaSiNo(hv.colesterol)],
+        ['Depresión', etiquetaSiNo(hv.depresion)],
+        ['Sedentarismo', etiquetaSiNo(hv.sedentarismo)],
+        ['Abuso alcohol/drogas', etiquetaSiNo(hv.abuso_alcohol_drogas)],
+        ['Estrés', etiquetaSiNo(hv.stress)],
+        ['Exceso preocupación por la salud', etiquetaSiNo(hv.exceso_preocupacion_salud)],
+        ['Exceso de pantalla', etiquetaSiNo(hv.exceso_pantalla)],
+        ['Fuma', etiquetaFuma(hv.fuma)],
+        ['Fumador crónico', etiquetaSiNo(hv.fumador_cronico)],
+        ['Hipertensión familiar', etiquetaSiNo(hv.hipertension_familiar)],
+        ['Diabetes familiar', etiquetaSiNo(hv.diabetes_familiar)],
+        ['Adicciones familiar', etiquetaSiNo(hv.adicciones_familiar)],
+        ['Obesidad familiar', etiquetaSiNo(hv.obesidad_familiar)],
+        ['Depresión familiar', etiquetaSiNo(hv.depresion_familiar)],
+        ['Violencia familiar', etiquetaSiNo(hv.violencia_familiar)],
+        ['Antecedente cáncer de colon', etiquetaSiNo(hv.cancer_de_colon)],
+        ['Antecedente cáncer de mama', etiquetaSiNo(hv.cancer_de_mama)],
+        ['Antecedente cáncer cuello uterino', etiquetaSiNo(hv.cancer_cuello_utero)],
+        ['Antecedente cáncer de próstata', etiquetaSiNo(hv.cancer_de_prostata)],
     ];
 
     el.innerHTML = `
@@ -279,9 +298,9 @@ function renderHojaDeVida(data) {
                 <div class="bg-gray-50 rounded-lg p-2 text-xs text-gray-600">BMI: <strong>${hv.bmi ?? '-'} (${hv.categoria_bmi ?? '-'})</strong></div>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                ${factores.map(([label, valor]) => `
-                    <div class="flex justify-between items-center rounded-lg p-2 text-xs ${valor ? 'bg-red-50 text-red-700' : 'bg-gray-50 text-gray-400'}">
-                        <span>${label}</span><span class="font-bold ml-2">${valor ? 'Sí' : 'No'}</span>
+                ${factores.map(([label, tag]) => `
+                    <div class="flex justify-between items-center rounded-lg p-2 text-xs ${tag.clase}">
+                        <span>${label}</span><span class="font-bold ml-2">${tag.texto}</span>
                     </div>`).join('')}
             </div>
         </div>`;
