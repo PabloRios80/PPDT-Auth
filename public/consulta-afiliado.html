@@ -93,6 +93,9 @@
             <!-- Tarjeta afiliado -->
             <div id="tarjetaAfiliado" class="bg-white rounded-xl shadow p-5 border border-blue-100"></div>
 
+            <!-- Hoja de Vida -->
+            <div id="tarjetaHojaDeVida" class="hidden bg-white rounded-xl shadow p-5 border border-blue-100"></div>
+
             <!-- Último DP -->
             <div id="tarjetaUltimoDP" class="hidden bg-white rounded-xl shadow p-5 border border-blue-100"></div>
 
@@ -147,7 +150,7 @@ async function buscarAfiliado() {
 
     try {
         // 1. Verificar en IAPOS
-        const [iaposRes, estudiosRes, pendientesRes, turnosRes, derivacionesRes, ultimoDPRes] = await Promise.all([
+        const [iaposRes, estudiosRes, pendientesRes, turnosRes, derivacionesRes, ultimoDPRes, hojaDeVidaRes] = await Promise.all([
             fetch(`/verificar-afiliado/${dni}`),
             fetch('/api/estudios-paciente', {
                 method: 'POST',
@@ -165,6 +168,9 @@ async function buscarAfiliado() {
             }),
             fetch(`/api/ultimo-dp/${dniNorm}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch(`/api/hoja-de-vida/${dniNorm}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
             })
         ]);
 
@@ -174,11 +180,13 @@ async function buscarAfiliado() {
         const turnos = await turnosRes.json();
         const derivaciones = await derivacionesRes.json();
         const ultimoDP = await ultimoDPRes.json();
+        const hojaDeVida = await hojaDeVidaRes.json();
 
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('resultado').classList.remove('hidden');
 
         renderTarjetaAfiliado(iapos, dni);
+        renderHojaDeVida(hojaDeVida);
         renderUltimoDP(ultimoDP);
         renderPendientes(pendientes);
         renderEstudios(estudios);
@@ -212,6 +220,72 @@ function renderTarjetaAfiliado(iapos, dni) {
             </div>
             <p class="text-sm text-red-600 mt-1">${iapos.mensaje || ''}</p>`;
     }
+}
+
+function renderHojaDeVida(data) {
+    const el = document.getElementById('tarjetaHojaDeVida');
+    const hv = data.hojaDeVida;
+
+    if (!hv) {
+        el.innerHTML = `
+            <h3 class="font-bold text-gray-700 mb-2"><i class="fas fa-file-medical text-red-400 mr-2"></i>Hoja de Vida</h3>
+            <p class="text-red-600 text-sm font-bold">❌ No completó la Hoja de Vida.</p>`;
+        el.classList.remove('hidden');
+        return;
+    }
+
+    const fecha = hv.fecha_carga
+        ? new Date(hv.fecha_carga).toLocaleDateString('es-AR', {year:'numeric', month:'long', day:'numeric'})
+        : '';
+
+    const factores = [
+        ['Hipertensión', hv.hipertension],
+        ['Diabetes', hv.diabetes],
+        ['Colesterol', hv.colesterol],
+        ['Depresión', hv.depresion],
+        ['Sedentarismo', hv.sedentarismo],
+        ['Abuso alcohol/drogas', hv.abuso_alcohol_drogas],
+        ['Estrés', hv.stress],
+        ['Exceso preocupación por la salud', hv.exceso_preocupacion_salud],
+        ['Exceso de pantalla', hv.exceso_pantalla],
+        ['Fuma', hv.fuma],
+        ['Fumador crónico', hv.fumador_cronico],
+        ['Hipertensión familiar', hv.hipertension_familiar],
+        ['Diabetes familiar', hv.diabetes_familiar],
+        ['Adicciones familiar', hv.adicciones_familiar],
+        ['Obesidad familiar', hv.obesidad_familiar],
+        ['Depresión familiar', hv.depresion_familiar],
+        ['Violencia familiar', hv.violencia_familiar],
+        ['Antecedente cáncer de colon', hv.cancer_de_colon],
+        ['Antecedente cáncer de mama', hv.cancer_de_mama],
+        ['Antecedente cáncer cuello uterino', hv.cancer_cuello_utero],
+        ['Antecedente cáncer de próstata', hv.cancer_de_prostata],
+    ];
+
+    el.innerHTML = `
+        <div class="flex justify-between items-start mb-2">
+            <h3 class="font-bold text-gray-700"><i class="fas fa-file-medical text-green-500 mr-2"></i>Hoja de Vida</h3>
+            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✅ Completada</span>
+        </div>
+        <p class="text-sm text-gray-500 mb-3">Cargada el ${fecha}${hv.origen_carga ? ' · Origen: ' + hv.origen_carga : ''}</p>
+        <button onclick="document.getElementById('detalleHojaVida').classList.toggle('hidden'); this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');"
+            class="text-blue-600 text-sm font-bold mb-2">
+            <i class="fas fa-chevron-down mr-1"></i>Ver resultados
+        </button>
+        <div id="detalleHojaVida" class="hidden">
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+                <div class="bg-gray-50 rounded-lg p-2 text-xs text-gray-600">Altura: <strong>${hv.altura ?? '-'}</strong></div>
+                <div class="bg-gray-50 rounded-lg p-2 text-xs text-gray-600">Peso: <strong>${hv.peso ?? '-'}</strong></div>
+                <div class="bg-gray-50 rounded-lg p-2 text-xs text-gray-600">BMI: <strong>${hv.bmi ?? '-'} (${hv.categoria_bmi ?? '-'})</strong></div>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                ${factores.map(([label, valor]) => `
+                    <div class="flex justify-between items-center rounded-lg p-2 text-xs ${valor ? 'bg-red-50 text-red-700' : 'bg-gray-50 text-gray-400'}">
+                        <span>${label}</span><span class="font-bold ml-2">${valor ? 'Sí' : 'No'}</span>
+                    </div>`).join('')}
+            </div>
+        </div>`;
+    el.classList.remove('hidden');
 }
 
 function renderUltimoDP(data) {

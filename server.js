@@ -447,11 +447,6 @@ app.post("/aprobar-usuario", async (req, res) => {
         puede_cerrar_interno: req.body.puede_cerrar_interno === true,
         puede_derivar: req.body.puede_derivar === true,
         es_superuser: req.body.es_superuser === true,
-        ve_tablero: req.body.ve_tablero !== false,
-        ve_agenda: req.body.ve_agenda !== false,
-        ve_crm: req.body.ve_crm !== false,
-        ve_practicas: req.body.ve_practicas !== false,
-        ve_consultas: req.body.ve_consultas !== false,
       })
       .eq("dni", dniNormalizado);
 
@@ -464,55 +459,6 @@ app.post("/aprobar-usuario", async (req, res) => {
     });
   } catch (error) {
     console.error("Error en /aprobar-usuario:", error.message);
-    res.status(500).json({ success: false, message: "Error de conexión." });
-  }
-});
-app.post("/resetear-password", async (req, res) => {
-  try {
-    const { dni } = req.body;
-    const adminKey = req.headers["x-admin-key"];
-
-    if (adminKey !== process.env.ADMIN_KEY) {
-      return res
-        .status(403)
-        .json({ success: false, message: "No autorizado." });
-    }
-
-    const dniNormalizado = dni
-      .toString()
-      .replace(/^[a-zA-Z]+/, "")
-      .trim();
-
-    const { data: prof } = await supabase
-      .from("profesionales")
-      .select("usuario, nombre, apellido")
-      .eq("dni", dniNormalizado)
-      .single();
-
-    if (!prof)
-      return res.json({ success: false, message: "Usuario no encontrado." });
-
-    const passwordTemporal = Math.random().toString(36).slice(-8).toUpperCase();
-    const passwordHash = await bcrypt.hash(passwordTemporal, 10);
-
-    await supabase
-      .from("profesionales")
-      .update({
-        password_hash: passwordHash,
-        password_temporal: passwordTemporal,
-        debe_cambiar_password: true,
-      })
-      .eq("dni", dniNormalizado);
-
-    console.log(`🔑 Password reseteada: ${prof.usuario}`);
-    res.json({
-      success: true,
-      usuario: prof.usuario,
-      passwordTemporal,
-      message: `Contraseña reseteada para ${prof.usuario}`,
-    });
-  } catch (error) {
-    console.error("Error en /resetear-password:", error.message);
     res.status(500).json({ success: false, message: "Error de conexión." });
   }
 });
@@ -550,7 +496,7 @@ app.get("/usuarios-aprobados", async (req, res) => {
     const { data } = await supabase
       .from("profesionales")
       .select(
-        "dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp, email, telefono, matricula",
+        "dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp",
       )
       .eq("activo", true)
       .order("fecha_alta", { ascending: false });
@@ -1164,6 +1110,24 @@ app.get("/api/ultimo-dp/:dni", async (req, res) => {
     res.json({ success: true, ultimoDP: data || null });
   } catch (e) {
     res.json({ success: true, ultimoDP: null });
+  }
+});
+
+app.get("/api/hoja-de-vida/:dni", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ success: false });
+    jwt.verify(token, JWT_SECRET);
+    const { data } = await supabase
+      .from("historial_hoja_de_vida")
+      .select("*")
+      .eq("dni", req.params.dni)
+      .order("fecha_carga", { ascending: false })
+      .limit(1)
+      .single();
+    res.json({ success: true, hojaDeVida: data || null });
+  } catch (e) {
+    res.json({ success: true, hojaDeVida: null });
   }
 });
 // Sedes de un prestador
