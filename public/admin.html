@@ -572,6 +572,10 @@
                       class="px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-300 text-blue-700 hover:bg-blue-50">
                       <i class="fas fa-id-card mr-1"></i>Tarjeta datos
                   </button>
+                  <button onclick="resetearPassword('${p.dni}', '${p.nombre} ${p.apellido}')"
+                      class="px-3 py-1.5 rounded-lg text-xs font-bold border border-orange-400 text-orange-700 hover:bg-orange-50">
+                      <i class="fas fa-key mr-1"></i>Resetear pass
+                  </button>
                   <div class="flex items-center gap-1">
                       <select id="sede_${p.dni}" 
                           class="text-xs border border-blue-300 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-blue-400">
@@ -641,6 +645,50 @@
     <p><span class="font-bold text-gray-600">Matrícula:</span> ${p.matricula || "No aplica"}</p>
     <p><span class="font-bold text-gray-600">Sede:</span> ${sede ? `${sede.nombre} (${sede.ciudad})` : "Sin sede"}</p>
   `;
+        document.getElementById("modalTarjeta").classList.remove("hidden");
+      }
+
+      async function resetearPassword(dni, nombreCompleto) {
+        if (
+          !confirm(
+            `¿Resetear la contraseña de ${nombreCompleto}? Se va a generar una contraseña temporal nueva.`,
+          )
+        )
+          return;
+
+        const res = await fetch("/resetear-password", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminKey,
+          },
+          body: JSON.stringify({ dni }),
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          alert(data.message || "No se pudo resetear la contraseña.");
+          return;
+        }
+
+        const textoCredenciales = `Acceso Día Preventivo IAPOS\nUsuario: ${data.usuario}\nContraseña temporal: ${data.passwordTemporal}\nIngresá en: https://acceso.diapreventivoiapos.com\nDeberás cambiar la contraseña al primer ingreso.`;
+
+        document.getElementById("tarjetaContenido").innerHTML = `
+    <p class="font-bold text-green-700 mb-2"><i class="fas fa-check-circle mr-1"></i>Contraseña reseteada</p>
+    <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:8px; padding:12px; font-family:monospace; font-size:13px; color:#166534;">
+        <p>👤 Usuario: <strong>${data.usuario}</strong></p>
+        <p>🔑 Contraseña temporal: <strong>${data.passwordTemporal}</strong></p>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;">
+        <button onclick="navigator.clipboard.writeText(\`${textoCredenciales}\`).then(()=>alert('Copiado al portapapeles'))"
+            style="background:#014189; color:white; border:none; border-radius:6px; padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer;">
+            <i class="fas fa-copy mr-1"></i>Copiar
+        </button>
+        <a href="https://wa.me/?text=${encodeURIComponent(textoCredenciales)}" target="_blank"
+            style="background:#25D366; color:white; border-radius:6px; padding:7px 14px; font-size:12px; font-weight:700; text-decoration:none; display:inline-block;">
+            <i class="fab fa-whatsapp mr-1"></i>Enviar por WhatsApp
+        </a>
+    </div>`;
         document.getElementById("modalTarjeta").classList.remove("hidden");
       }
 
