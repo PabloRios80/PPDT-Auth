@@ -803,6 +803,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
         Apellido: e.apellido || "",
         Fecha: e.fecha_cierre_enf || "",
         Prestador: e.nombre_enfermera || "",
+        LinkPDF: e.espirometria_pdf || "",
         ResultadosEnfermeria: {
           Altura: e.altura_cm ? String(e.altura_cm) : "",
           Peso: e.peso_kg ? String(e.peso_kg) : "",
@@ -1049,12 +1050,45 @@ app.get("/api/practicas-pendientes/:dni", async (req, res) => {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ success: false });
     jwt.verify(token, JWT_SECRET);
-    const { data } = await supabase
-      .from("practicas_autorizadas")
-      .select("descripcion_practica, codigo_prestacion")
-      .eq("dni", req.params.dni)
-      .eq("estado", "AUTORIZADA");
-    res.json({ success: true, practicas: data || [] });
+
+    const dni = req.params.dni;
+
+    const [{ data: practicas }, { data: enfermeria }, { data: odontologia }] =
+      await Promise.all([
+        supabase
+          .from("practicas_autorizadas")
+          .select("descripcion_practica, codigo_prestacion")
+          .eq("dni", dni)
+          .eq("estado", "AUTORIZADA"),
+        supabase.from("enfermeria_consultas").select("id").eq("dni", dni).limit(1),
+        supabase.from("odontologia_consultas").select("id").eq("dni", dni).limit(1),
+      ]);
+
+    const tieneEnfermeria = (enfermeria || []).length > 0;
+    const tieneOdontologia = (odontologia || []).length > 0;
+
+    // Descripciones genéricas que se dan por resueltas si ya hubo consulta
+    // real de enfermería u odontología, aunque su fila individual en
+    // practicas_autorizadas nunca pase a REALIZADA.
+    const CUBIERTAS_POR_ENFERMERIA = [
+      "tomar ta",
+      "calcular imc",
+      "vacuna",
+      "control vision",
+      "control visión",
+    ];
+    const CUBIERTAS_POR_ODONTOLOGIA = ["odontolog"];
+
+    const pendientesFiltradas = (practicas || []).filter((p) => {
+      const desc = (p.descripcion_practica || "").toLowerCase();
+      if (tieneEnfermeria && CUBIERTAS_POR_ENFERMERIA.some((k) => desc.includes(k)))
+        return false;
+      if (tieneOdontologia && CUBIERTAS_POR_ODONTOLOGIA.some((k) => desc.includes(k)))
+        return false;
+      return true;
+    });
+
+    res.json({ success: true, practicas: pendientesFiltradas });
   } catch (e) {
     res.status(500).json({ success: false, message: e.message });
   }

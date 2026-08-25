@@ -400,6 +400,17 @@ function renderEstudios(data) {
                     });
                     html += `</div>`;
                 }
+            } else if (e.ResultadosEnfermeria) {
+                const vals = Object.entries(e.ResultadosEnfermeria).filter(([k,v]) => v && k !== 'Espirometria_PDF');
+                if (vals.length > 0) {
+                    html += `<div class="mt-2 grid grid-cols-2 gap-1">`;
+                    vals.forEach(([k, v]) => {
+                        html += `<div class="rounded px-2 py-1 text-xs bg-blue-50 text-blue-700">
+                            <span class="font-bold">${k.replace(/_/g,' ')}:</span> ${v}
+                        </div>`;
+                    });
+                    html += `</div>`;
+                }
             } else if (e.Resultado) {
                 html += `<p class="text-xs text-gray-600 mt-1"><span class="font-bold">Resultado:</span> ${e.Resultado}</p>`;
             }
