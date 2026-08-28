@@ -619,7 +619,7 @@ app.get("/usuarios-aprobados", async (req, res) => {
     const { data } = await supabase
       .from("profesionales")
       .select(
-        "dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp",
+        "dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp, telefono, email, matricula",
       )
       .eq("activo", true)
       .order("fecha_alta", { ascending: false });
@@ -761,7 +761,9 @@ app.get("/prestadores-aprobados", async (req, res) => {
 
     const { data } = await supabase
       .from("prestadores_institucionales")
-      .select("id, nombre_institucion, especialidad, usuario, rol, fecha_alta")
+      .select(
+        "id, nombre_institucion, especialidad, usuario, rol, fecha_alta, telefono, mail, cuit, direccion, localidad, provincia, nombre_responsable, matricula_responsable, telefono_responsable, mail_responsable",
+      )
       .eq("activo", true)
       .order("fecha_alta", { ascending: false });
 
