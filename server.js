@@ -468,6 +468,79 @@ app.post("/aprobar-usuario", async (req, res) => {
   }
 });
 
+app.post("/editar-contacto-profesional", async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    if (adminKey !== process.env.ADMIN_KEY) {
+      return res.status(403).json({ success: false, message: "No autorizado." });
+    }
+
+    const { dni, telefono, email, matricula } = req.body;
+    if (!dni)
+      return res.status(400).json({ success: false, message: "Falta DNI." });
+
+    const { error } = await supabase
+      .from("profesionales")
+      .update({
+        telefono: telefono || null,
+        email: email || null,
+        matricula: matricula || null,
+      })
+      .eq("dni", dni.toString().replace(/^[a-zA-Z]+/, "").trim());
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error en /editar-contacto-profesional:", error.message);
+    res.status(500).json({ success: false, message: "Error de conexión." });
+  }
+});
+
+app.post("/editar-contacto-prestador", async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    if (adminKey !== process.env.ADMIN_KEY) {
+      return res.status(403).json({ success: false, message: "No autorizado." });
+    }
+
+    const {
+      id,
+      telefono,
+      mail,
+      direccion,
+      localidad,
+      provincia,
+      nombre_responsable,
+      telefono_responsable,
+      mail_responsable,
+      matricula_responsable,
+    } = req.body;
+    if (!id)
+      return res.status(400).json({ success: false, message: "Falta id." });
+
+    const { error } = await supabase
+      .from("prestadores_institucionales")
+      .update({
+        telefono: telefono || null,
+        mail: mail || null,
+        direccion: direccion || null,
+        localidad: localidad || null,
+        provincia: provincia || null,
+        nombre_responsable: nombre_responsable || null,
+        telefono_responsable: telefono_responsable || null,
+        mail_responsable: mail_responsable || null,
+        matricula_responsable: matricula_responsable || null,
+      })
+      .eq("id", id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error en /editar-contacto-prestador:", error.message);
+    res.status(500).json({ success: false, message: "Error de conexión." });
+  }
+});
+
 app.post("/resetear-password", async (req, res) => {
   try {
     const { dni } = req.body;

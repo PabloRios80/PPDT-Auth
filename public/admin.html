@@ -613,6 +613,10 @@
           </div>
           <div class="flex gap-2 items-center flex-wrap">
               <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">Prestador</span>
+              <button onclick='abrirTarjeta(${JSON.stringify(p)}, "prestador")'
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-300 text-blue-700 hover:bg-blue-50">
+                  <i class="fas fa-id-card mr-1"></i>Tarjeta datos
+              </button>
               <button onclick="abrirGestionSedesPrestador(${p.id}, '${p.nombre_institucion}')"
                   class="px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-400 text-indigo-700 hover:bg-indigo-50">
                   <i class="fas fa-map-marker-alt mr-1"></i>Sedes
@@ -635,17 +639,161 @@
         });
       }
 
-      function abrirTarjeta(p) {
-        const sede = aprobadosRaw.sedes.find((s) => s.id == p.id_sede_dp);
-        document.getElementById("tarjetaContenido").innerHTML = `
+      function abrirTarjeta(p, tipo = "profesional") {
+        window._tarjetaTipoActual = tipo;
+        window._tarjetaDatoActual = p;
+
+        if (tipo === "prestador") {
+          document.getElementById("tarjetaContenido").innerHTML = `
+    <p><span class="font-bold text-gray-600">Institución:</span> ${p.nombre_institucion}</p>
+    <p><span class="font-bold text-gray-600">CUIT:</span> ${p.cuit || "-"}</p>
+    <p><span class="font-bold text-gray-600">Especialidad:</span> ${p.especialidad || "-"}</p>
+    <div>
+      <label class="text-xs font-bold text-gray-600 block mb-1">Teléfono</label>
+      <input id="tarjetaTelefono" type="text" value="${p.telefono || ""}"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <div>
+      <label class="text-xs font-bold text-gray-600 block mb-1">Email</label>
+      <input id="tarjetaEmail" type="text" value="${p.mail || ""}"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <div>
+      <label class="text-xs font-bold text-gray-600 block mb-1">Dirección</label>
+      <input id="tarjetaDireccion" type="text" value="${p.direccion || ""}"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="text-xs font-bold text-gray-600 block mb-1">Localidad</label>
+        <input id="tarjetaLocalidad" type="text" value="${p.localidad || ""}"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-600 block mb-1">Provincia</label>
+        <input id="tarjetaProvincia" type="text" value="${p.provincia || ""}"
+          class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+      </div>
+    </div>
+    <p class="font-bold text-gray-600 text-xs pt-2 border-t border-gray-100">Responsable</p>
+    <div>
+      <label class="text-xs font-bold text-gray-600 block mb-1">Nombre del responsable</label>
+      <input id="tarjetaNombreResp" type="text" value="${p.nombre_responsable || ""}"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <div>
+      <label class="text-xs font-bold text-gray-600 block mb-1">Matrícula del responsable</label>
+      <input id="tarjetaMatriculaResp" type="text" value="${p.matricula_responsable || ""}"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <div>
+      <label class="text-xs font-bold text-gray-600 block mb-1">Teléfono del responsable</label>
+      <input id="tarjetaTelefonoResp" type="text" value="${p.telefono_responsable || ""}"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <div>
+      <label class="text-xs font-bold text-gray-600 block mb-1">Email del responsable</label>
+      <input id="tarjetaEmailResp" type="text" value="${p.mail_responsable || ""}"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <button onclick="guardarContactoTarjeta()"
+      class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 mt-2">
+      <i class="fas fa-save mr-1"></i>Guardar
+    </button>
+    <p id="tarjetaMsg" class="hidden text-center text-xs font-bold py-1"></p>
+  `;
+        } else {
+          const sede = aprobadosRaw.sedes.find((s) => s.id == p.id_sede_dp);
+          document.getElementById("tarjetaContenido").innerHTML = `
     <p><span class="font-bold text-gray-600">Nombre:</span> ${p.apellido}, ${p.nombre}</p>
     <p><span class="font-bold text-gray-600">DNI:</span> ${p.dni}</p>
-    <p><span class="font-bold text-gray-600">Teléfono:</span> ${p.telefono || "-"}</p>
-    <p><span class="font-bold text-gray-600">Email:</span> ${p.email || "-"}</p>
-    <p><span class="font-bold text-gray-600">Matrícula:</span> ${p.matricula || "No aplica"}</p>
+    <div>
+      <label class="text-xs font-bold text-gray-600 block mb-1">Teléfono</label>
+      <input id="tarjetaTelefono" type="text" value="${p.telefono || ""}"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <div>
+      <label class="text-xs font-bold text-gray-600 block mb-1">Email</label>
+      <input id="tarjetaEmail" type="text" value="${p.email || ""}"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
+    <div>
+      <label class="text-xs font-bold text-gray-600 block mb-1">Matrícula</label>
+      <input id="tarjetaMatricula" type="text" value="${p.matricula || ""}"
+        class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
+    </div>
     <p><span class="font-bold text-gray-600">Sede:</span> ${sede ? `${sede.nombre} (${sede.ciudad})` : "Sin sede"}</p>
+    <button onclick="guardarContactoTarjeta()"
+      class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 mt-2">
+      <i class="fas fa-save mr-1"></i>Guardar
+    </button>
+    <p id="tarjetaMsg" class="hidden text-center text-xs font-bold py-1"></p>
   `;
+        }
         document.getElementById("modalTarjeta").classList.remove("hidden");
+      }
+
+      async function guardarContactoTarjeta() {
+        const tipo = window._tarjetaTipoActual;
+        const p = window._tarjetaDatoActual;
+        const msg = document.getElementById("tarjetaMsg");
+
+        let body, url;
+        if (tipo === "prestador") {
+          url = "/editar-contacto-prestador";
+          body = {
+            id: p.id,
+            telefono: document.getElementById("tarjetaTelefono").value.trim(),
+            mail: document.getElementById("tarjetaEmail").value.trim(),
+            direccion: document.getElementById("tarjetaDireccion").value.trim(),
+            localidad: document.getElementById("tarjetaLocalidad").value.trim(),
+            provincia: document.getElementById("tarjetaProvincia").value.trim(),
+            nombre_responsable: document
+              .getElementById("tarjetaNombreResp")
+              .value.trim(),
+            matricula_responsable: document
+              .getElementById("tarjetaMatriculaResp")
+              .value.trim(),
+            telefono_responsable: document
+              .getElementById("tarjetaTelefonoResp")
+              .value.trim(),
+            mail_responsable: document
+              .getElementById("tarjetaEmailResp")
+              .value.trim(),
+          };
+        } else {
+          url = "/editar-contacto-profesional";
+          body = {
+            dni: p.dni,
+            telefono: document.getElementById("tarjetaTelefono").value.trim(),
+            email: document.getElementById("tarjetaEmail").value.trim(),
+            matricula: document.getElementById("tarjetaMatricula").value.trim(),
+          };
+        }
+
+        try {
+          const res = await fetch(url, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "x-admin-key": adminKey,
+            },
+            body: JSON.stringify(body),
+          });
+          const data = await res.json();
+          msg.classList.remove("hidden");
+          if (data.success) {
+            msg.textContent = "Guardado correctamente.";
+            msg.className = "text-center text-xs font-bold py-1 text-green-600";
+          } else {
+            msg.textContent = data.message || "Error al guardar.";
+            msg.className = "text-center text-xs font-bold py-1 text-red-600";
+          }
+        } catch (e) {
+          msg.classList.remove("hidden");
+          msg.textContent = "Error de conexión.";
+          msg.className = "text-center text-xs font-bold py-1 text-red-600";
+        }
       }
 
       async function resetearPassword(dni, nombreCompleto) {
