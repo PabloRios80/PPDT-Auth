@@ -467,6 +467,51 @@ app.post("/aprobar-usuario", async (req, res) => {
     res.status(500).json({ success: false, message: "Error de conexión." });
   }
 });
+
+app.post("/resetear-password", async (req, res) => {
+  try {
+    const { dni } = req.body;
+    const adminKey = req.headers["x-admin-key"];
+
+    if (adminKey !== process.env.ADMIN_KEY) {
+      return res.status(403).json({ success: false, message: "No autorizado." });
+    }
+
+    const dniNormalizado = dni.toString().replace(/^[a-zA-Z]+/, "").trim();
+
+    const { data: prof } = await supabase
+      .from("profesionales")
+      .select("usuario, nombre, apellido")
+      .eq("dni", dniNormalizado)
+      .single();
+
+    if (!prof)
+      return res.json({ success: false, message: "Usuario no encontrado." });
+
+    const passwordTemporal = Math.random().toString(36).slice(-8).toUpperCase();
+    const passwordHash = await bcrypt.hash(passwordTemporal, 10);
+
+    await supabase
+      .from("profesionales")
+      .update({
+        password_hash: passwordHash,
+        password_temporal: passwordTemporal,
+        debe_cambiar_password: true,
+      })
+      .eq("dni", dniNormalizado);
+
+    console.log(`🔑 Password reseteada: ${prof.usuario}`);
+    res.json({
+      success: true,
+      usuario: prof.usuario,
+      passwordTemporal,
+      message: `Contraseña reseteada para ${prof.usuario}`,
+    });
+  } catch (error) {
+    console.error("Error en /resetear-password:", error.message);
+    res.status(500).json({ success: false, message: "Error de conexión." });
+  }
+});
 // ── LISTAR SOLICITUDES PENDIENTES ──
 app.get("/solicitudes-pendientes", async (req, res) => {
   try {
