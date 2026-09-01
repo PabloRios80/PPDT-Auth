@@ -135,18 +135,23 @@ async function solicitarAccesoPrestador(req, res) {
   try {
     const d = req.body;
 
-    // Verificar si ya existe
+    // Verificar si ya existe: mismo CUIT Y misma especialidad. Un mismo
+    // prestador (mismo CUIT, ej. un hospital) puede brindar varios
+    // servicios distintos — cada especialidad es un registro propio,
+    // igual que ya pasa con ATEM (imágenes vs. coordinación DP).
     const { data: existe } = await supabase
       .from("prestadores_institucionales")
       .select("id, activo")
       .eq("cuit", d.cuit)
+      .eq("especialidad", d.profesion)
       .single();
 
     if (existe) {
       if (existe.activo)
         return res.json({
           success: false,
-          message: "Este prestador ya tiene acceso al sistema.",
+          message:
+            "Este prestador ya tiene acceso al sistema para esta especialidad.",
         });
       return res.json({
         success: false,
