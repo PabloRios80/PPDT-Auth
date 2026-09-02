@@ -704,16 +704,35 @@ app.post("/aprobar-prestador", async (req, res) => {
     if (!prest)
       return res.json({ success: false, message: "Prestador no encontrado." });
 
-    const usuario =
+    const usuarioBase =
       prest.nombre_institucion
         .toLowerCase()
         .replace(/\s+/g, "")
         .replace(/[^a-z0-9]/g, "")
         .slice(0, 10) + prest.cuit.slice(-4);
+
+    // El mismo CUIT/nombre puede tener varios registros (uno por
+    // especialidad, ej. un hospital que es prestador de imágenes Y de
+    // espirometría) — si el usuario generado ya existe, se le suma un
+    // sufijo numérico hasta encontrar uno libre.
+    let usuario = usuarioBase;
+    let sufijo = 1;
+    while (true) {
+      const { data: colision } = await supabase
+        .from("prestadores_institucionales")
+        .select("id")
+        .eq("usuario", usuario)
+        .neq("id", id)
+        .maybeSingle();
+      if (!colision) break;
+      sufijo++;
+      usuario = usuarioBase + sufijo;
+    }
+
     const passwordTemporal = Math.random().toString(36).slice(-8).toUpperCase();
     const passwordHash = await bcrypt.hash(passwordTemporal, 10);
 
-    await supabase
+    const { error: errorUpdate } = await supabase
       .from("prestadores_institucionales")
       .update({
         usuario,
@@ -726,6 +745,14 @@ app.post("/aprobar-prestador", async (req, res) => {
         aprobado_por: "admin",
       })
       .eq("id", id);
+
+    if (errorUpdate) {
+      console.error("Error guardando prestador aprobado:", errorUpdate.message);
+      return res.status(500).json({
+        success: false,
+        message: "Error al guardar: " + errorUpdate.message,
+      });
+    }
 
     console.log(`✅ Prestador aprobado: ${usuario} / ${passwordTemporal}`);
     res.json({
