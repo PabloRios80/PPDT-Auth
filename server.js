@@ -546,6 +546,49 @@ app.post("/editar-contacto-prestador", async (req, res) => {
   }
 });
 
+app.post("/resetear-password-prestador", async (req, res) => {
+  try {
+    const { id } = req.body;
+    const adminKey = req.headers["x-admin-key"];
+
+    if (adminKey !== process.env.ADMIN_KEY) {
+      return res.status(403).json({ success: false, message: "No autorizado." });
+    }
+
+    const { data: prest } = await supabase
+      .from("prestadores_institucionales")
+      .select("usuario, nombre_institucion")
+      .eq("id", id)
+      .single();
+
+    if (!prest)
+      return res.json({ success: false, message: "Prestador no encontrado." });
+
+    const passwordTemporal = Math.random().toString(36).slice(-8).toUpperCase();
+    const passwordHash = await bcrypt.hash(passwordTemporal, 10);
+
+    await supabase
+      .from("prestadores_institucionales")
+      .update({
+        password_hash: passwordHash,
+        password_temporal: passwordTemporal,
+        debe_cambiar_password: true,
+      })
+      .eq("id", id);
+
+    console.log(`🔑 Password reseteada (prestador): ${prest.usuario}`);
+    res.json({
+      success: true,
+      usuario: prest.usuario,
+      passwordTemporal,
+      message: `Contraseña reseteada para ${prest.usuario}`,
+    });
+  } catch (error) {
+    console.error("Error en /resetear-password-prestador:", error.message);
+    res.status(500).json({ success: false, message: "Error de conexión." });
+  }
+});
+
 app.post("/resetear-password", async (req, res) => {
   try {
     const { dni } = req.body;
