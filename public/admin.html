@@ -727,6 +727,19 @@
         class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-blue-400" />
     </div>
     <p><span class="font-bold text-gray-600">Sede:</span> ${sede ? `${sede.nombre} (${sede.ciudad})` : "Sin sede"}</p>
+    <p class="font-bold text-gray-600 text-xs pt-2 border-t border-gray-100">Permisos</p>
+    <label class="flex items-start gap-2 bg-blue-50 rounded-lg p-2 cursor-pointer">
+      <input type="checkbox" id="tarjetaPuedeCerrarInterno" ${p.puede_cerrar_interno ? "checked" : ""} class="mt-1" />
+      <span class="text-sm"><strong>Médico interno</strong><br/><span class="text-xs text-gray-500">Ve agenda de cierre DP del centro de salud</span></span>
+    </label>
+    <label class="flex items-start gap-2 bg-green-50 rounded-lg p-2 cursor-pointer">
+      <input type="checkbox" id="tarjetaPuedeDerivar" ${p.puede_derivar ? "checked" : ""} class="mt-1" />
+      <span class="text-sm"><strong>Médico externo / derivador</strong><br/><span class="text-xs text-gray-500">Puede derivar pacientes y ve cuando están listos para cerrar</span></span>
+    </label>
+    <label class="flex items-start gap-2 bg-purple-50 rounded-lg p-2 cursor-pointer">
+      <input type="checkbox" id="tarjetaEsSuperuser" ${p.es_superuser ? "checked" : ""} class="mt-1" />
+      <span class="text-sm"><strong>Super usuario</strong><br/><span class="text-xs text-gray-500">Ve y gestiona todas las sedes, no solo la asignada</span></span>
+    </label>
     <button onclick="guardarContactoTarjeta()"
       class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 mt-2">
       <i class="fas fa-save mr-1"></i>Guardar
@@ -785,12 +798,38 @@
             body: JSON.stringify(body),
           });
           const data = await res.json();
+
+          let permisosOk = true;
+          let permisosMsg = "";
+          if (tipo !== "prestador") {
+            const resPermisos = await fetch("/editar-permisos-profesional", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-admin-key": adminKey,
+              },
+              body: JSON.stringify({
+                dni: p.dni,
+                puede_cerrar_interno: document.getElementById(
+                  "tarjetaPuedeCerrarInterno",
+                ).checked,
+                puede_derivar: document.getElementById("tarjetaPuedeDerivar")
+                  .checked,
+                es_superuser:
+                  document.getElementById("tarjetaEsSuperuser").checked,
+              }),
+            });
+            const dataPermisos = await resPermisos.json();
+            permisosOk = dataPermisos.success;
+            permisosMsg = dataPermisos.message || "";
+          }
+
           msg.classList.remove("hidden");
-          if (data.success) {
+          if (data.success && permisosOk) {
             msg.textContent = "Guardado correctamente.";
             msg.className = "text-center text-xs font-bold py-1 text-green-600";
           } else {
-            msg.textContent = data.message || "Error al guardar.";
+            msg.textContent = data.message || permisosMsg || "Error al guardar.";
             msg.className = "text-center text-xs font-bold py-1 text-red-600";
           }
         } catch (e) {

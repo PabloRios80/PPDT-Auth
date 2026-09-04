@@ -501,6 +501,34 @@ app.post("/editar-contacto-profesional", async (req, res) => {
   }
 });
 
+app.post("/editar-permisos-profesional", async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    if (adminKey !== process.env.ADMIN_KEY) {
+      return res.status(403).json({ success: false, message: "No autorizado." });
+    }
+
+    const { dni, puede_cerrar_interno, puede_derivar, es_superuser } = req.body;
+    if (!dni)
+      return res.status(400).json({ success: false, message: "Falta DNI." });
+
+    const { error } = await supabase
+      .from("profesionales")
+      .update({
+        puede_cerrar_interno: puede_cerrar_interno === true,
+        puede_derivar: puede_derivar === true,
+        es_superuser: es_superuser === true,
+      })
+      .eq("dni", dni.toString().replace(/^[a-zA-Z]+/, "").trim());
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error en /editar-permisos-profesional:", error.message);
+    res.status(500).json({ success: false, message: "Error de conexión." });
+  }
+});
+
 app.post("/editar-contacto-prestador", async (req, res) => {
   try {
     const adminKey = req.headers["x-admin-key"];
@@ -667,7 +695,7 @@ app.get("/usuarios-aprobados", async (req, res) => {
     const { data } = await supabase
       .from("profesionales")
       .select(
-        "dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp, telefono, email, matricula",
+        "dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp, telefono, email, matricula, puede_cerrar_interno, puede_derivar, es_superuser",
       )
       .eq("activo", true)
       .order("fecha_alta", { ascending: false });
