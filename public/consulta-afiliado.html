@@ -245,6 +245,45 @@ function renderHojaDeVida(data) {
     const el = document.getElementById('tarjetaHojaDeVida');
     const hv = data.hojaDeVida;
 
+    if (!hv && data.esMenor && data.datosMenor) {
+        const m = data.datosMenor;
+        const fechaMenor = m.fecha_carga
+            ? new Date(m.fecha_carga).toLocaleDateString('es-AR', {year:'numeric', month:'long', day:'numeric'})
+            : '';
+        const factoresMenor = [
+            ['Tabaco', etiquetaSiNo(m.tabaco)],
+            ['Alcohol', etiquetaSiNo(m.alcohol)],
+            ['Otras sustancias', etiquetaSiNo(m.sustancias)],
+            ['Violencia/abuso', etiquetaSiNo(m.violencia)],
+            ['Tristeza/aislamiento', etiquetaSiNo(m.tristeza)],
+            ['Preocupación por peso/alimentación', etiquetaSiNo(m.alim_trastorno)],
+            ['Vacunas NO al día', etiquetaSiNo(m.vacunas === 'no' ? 'si' : (m.vacunas === 'si' ? 'no' : m.vacunas))],
+            ['Antecedente familiar hipertensión', etiquetaSiNo(m.fam_hipertension)],
+            ['Antecedente familiar diabetes', etiquetaSiNo(m.fam_diabetes)],
+            ['Antecedente familiar cáncer', etiquetaSiNo(m.fam_cancer)],
+        ];
+        el.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-gray-700"><i class="fas fa-file-medical text-green-500 mr-2"></i>Hoja de Vida (Menor)</h3>
+                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✅ Completada</span>
+            </div>
+            <p class="text-sm text-gray-500 mb-3">Cargada el ${fechaMenor}${m.condicion_salud === 'si' ? ' · <span class="text-red-600 font-bold">🔴 Condición de salud diagnosticada' + (m.condicion_detalle ? ': ' + m.condicion_detalle : '') + '</span>' : ''}</p>
+            <button onclick="document.getElementById('detalleHojaVida').classList.toggle('hidden'); this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');"
+                class="text-blue-600 text-sm font-bold mb-2">
+                <i class="fas fa-chevron-down mr-1"></i>Ver resultados
+            </button>
+            <div id="detalleHojaVida" class="hidden">
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    ${factoresMenor.map(([label, tag]) => `
+                        <div class="flex justify-between items-center rounded-lg p-2 text-xs ${tag.clase}">
+                            <span>${label}</span><span class="font-bold ml-2">${tag.texto}</span>
+                        </div>`).join('')}
+                </div>
+            </div>`;
+        el.classList.remove('hidden');
+        return;
+    }
+
     if (!hv) {
         el.innerHTML = `
             <h3 class="font-bold text-gray-700 mb-2"><i class="fas fa-file-medical text-red-400 mr-2"></i>Hoja de Vida</h3>

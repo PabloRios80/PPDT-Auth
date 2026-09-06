@@ -1380,6 +1380,7 @@ app.get("/api/hoja-de-vida/:dni", async (req, res) => {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ success: false });
     jwt.verify(token, JWT_SECRET);
+
     const { data } = await supabase
       .from("historial_hoja_de_vida")
       .select("*")
@@ -1387,9 +1388,35 @@ app.get("/api/hoja-de-vida/:dni", async (req, res) => {
       .order("fecha_carga", { ascending: false })
       .limit(1)
       .single();
-    res.json({ success: true, hojaDeVida: data || null });
+
+    if (data) {
+      return res.json({ success: true, hojaDeVida: data, esMenor: false });
+    }
+
+    // Si no tiene Hoja de Vida de adulto, buscar en afiliados_menores —
+    // es un formulario y una tabla completamente distintos, con otros
+    // campos (no una Hoja de Vida "incompleta": simplemente vive en otro
+    // circuito, el de menores).
+    const { data: dataMenor } = await supabase
+      .from("afiliados_menores")
+      .select("*")
+      .eq("dni", req.params.dni)
+      .order("fecha_carga", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (dataMenor) {
+      return res.json({
+        success: true,
+        hojaDeVida: null,
+        esMenor: true,
+        datosMenor: dataMenor,
+      });
+    }
+
+    res.json({ success: true, hojaDeVida: null, esMenor: false });
   } catch (e) {
-    res.json({ success: true, hojaDeVida: null });
+    res.json({ success: true, hojaDeVida: null, esMenor: false });
   }
 });
 // Sedes de un prestador
