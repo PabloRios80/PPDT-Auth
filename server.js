@@ -1393,10 +1393,28 @@ app.get("/api/hoja-de-vida/:dni", async (req, res) => {
       return res.json({ success: true, hojaDeVida: data, esMenor: false });
     }
 
-    // Si no tiene Hoja de Vida de adulto, buscar en afiliados_menores —
-    // es un formulario y una tabla completamente distintos, con otros
-    // campos (no una Hoja de Vida "incompleta": simplemente vive en otro
-    // circuito, el de menores).
+    // Si no está en el historial (log de cada carga), puede que sí exista
+    // en la tabla maestra afiliados (mismo shape de columnas) — pasa
+    // cuando el registro se generó por otro circuito que no dejó rastro
+    // en historial_hoja_de_vida.
+    const { data: dataAfiliado } = await supabase
+      .from("afiliados")
+      .select("*")
+      .eq("dni", req.params.dni)
+      .single();
+
+    if (dataAfiliado) {
+      return res.json({
+        success: true,
+        hojaDeVida: dataAfiliado,
+        esMenor: false,
+      });
+    }
+
+    // Si tampoco está ahí, buscar en afiliados_menores — es un formulario
+    // y una tabla completamente distintos, con otros campos (no una Hoja
+    // de Vida "incompleta": simplemente vive en otro circuito, el de
+    // menores).
     const { data: dataMenor } = await supabase
       .from("afiliados_menores")
       .select("*")
