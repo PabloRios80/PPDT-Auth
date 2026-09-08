@@ -1381,10 +1381,16 @@ app.get("/api/hoja-de-vida/:dni", async (req, res) => {
     if (!token) return res.status(401).json({ success: false });
     jwt.verify(token, JWT_SECRET);
 
+    // El frontend manda el DNI sin ninguna letra (dniNorm), pero algunos
+    // DNIs viejos están guardados en la base CON una letra adelante (ej.
+    // "F6717904"). Se busca por sufijo (termina con estos dígitos), no
+    // por igualdad exacta, para no perder esos casos.
+    const dniBuscado = `%${req.params.dni}`;
+
     const { data } = await supabase
       .from("historial_hoja_de_vida")
       .select("*")
-      .eq("dni", req.params.dni)
+      .ilike("dni", dniBuscado)
       .order("fecha_carga", { ascending: false })
       .limit(1)
       .single();
@@ -1400,7 +1406,8 @@ app.get("/api/hoja-de-vida/:dni", async (req, res) => {
     const { data: dataAfiliado } = await supabase
       .from("afiliados")
       .select("*")
-      .eq("dni", req.params.dni)
+      .ilike("dni", dniBuscado)
+      .limit(1)
       .single();
 
     if (dataAfiliado) {
@@ -1418,7 +1425,7 @@ app.get("/api/hoja-de-vida/:dni", async (req, res) => {
     const { data: dataMenor } = await supabase
       .from("afiliados_menores")
       .select("*")
-      .eq("dni", req.params.dni)
+      .ilike("dni", dniBuscado)
       .order("fecha_carga", { ascending: false })
       .limit(1)
       .single();
