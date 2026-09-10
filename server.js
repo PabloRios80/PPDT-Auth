@@ -1268,7 +1268,17 @@ app.get("/verificar-afiliado/:dni", async (req, res) => {
       mensaje: get("Msgdsc"),
     });
   } catch (e) {
-    res.status(500).json({ esActivo: false, error: e.message });
+    console.error("Error consultando webservice IAPOS:", e.message);
+    // "No se pudo verificar" NO es lo mismo que "confirmado inactivo" — si
+    // se devuelve esActivo:false acá, el frontend no puede distinguir un
+    // corte real del webservice de IAPOS de un afiliado genuinamente
+    // inactivo, y termina mostrando "No activo" para todo el mundo
+    // cuando el webservice está caído.
+    res.status(200).json({
+      esActivo: false,
+      verificacionFallida: true,
+      error: e.message,
+    });
   }
 });
 

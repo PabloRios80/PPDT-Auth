@@ -212,6 +212,16 @@ function renderTarjetaAfiliado(iapos, dni) {
                 </div>
                 <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold">✅ Afiliado activo</span>
             </div>`;
+    } else if (iapos.verificacionFallida) {
+        // El webservice de IAPOS no respondió (caído/timeout) — no es lo
+        // mismo que un afiliado confirmado inactivo. No hay que asustar
+        // con un cartel rojo por una falla técnica ajena al paciente.
+        el.innerHTML = `
+            <div class="flex justify-between items-start">
+                <p class="font-bold text-gray-800">DNI: ${dni}</p>
+                <span class="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full text-sm font-bold">⚠️ No se pudo verificar en IAPOS</span>
+            </div>
+            <p class="text-sm text-yellow-700 mt-1">El padrón de IAPOS no respondió. Verificá manualmente el estado del afiliado antes de continuar.</p>`;
     } else {
         el.innerHTML = `
             <div class="flex justify-between items-start">
