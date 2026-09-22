@@ -477,7 +477,9 @@ app.post("/editar-contacto-profesional", async (req, res) => {
   try {
     const adminKey = req.headers["x-admin-key"];
     if (adminKey !== process.env.ADMIN_KEY) {
-      return res.status(403).json({ success: false, message: "No autorizado." });
+      return res
+        .status(403)
+        .json({ success: false, message: "No autorizado." });
     }
 
     const { dni, telefono, email, matricula } = req.body;
@@ -491,7 +493,13 @@ app.post("/editar-contacto-profesional", async (req, res) => {
         email: email || null,
         matricula: matricula || null,
       })
-      .eq("dni", dni.toString().replace(/^[a-zA-Z]+/, "").trim());
+      .eq(
+        "dni",
+        dni
+          .toString()
+          .replace(/^[a-zA-Z]+/, "")
+          .trim(),
+      );
 
     if (error) throw error;
     res.json({ success: true });
@@ -505,7 +513,9 @@ app.post("/editar-permisos-profesional", async (req, res) => {
   try {
     const adminKey = req.headers["x-admin-key"];
     if (adminKey !== process.env.ADMIN_KEY) {
-      return res.status(403).json({ success: false, message: "No autorizado." });
+      return res
+        .status(403)
+        .json({ success: false, message: "No autorizado." });
     }
 
     const { dni, puede_cerrar_interno, puede_derivar, es_superuser } = req.body;
@@ -519,7 +529,13 @@ app.post("/editar-permisos-profesional", async (req, res) => {
         puede_derivar: puede_derivar === true,
         es_superuser: es_superuser === true,
       })
-      .eq("dni", dni.toString().replace(/^[a-zA-Z]+/, "").trim());
+      .eq(
+        "dni",
+        dni
+          .toString()
+          .replace(/^[a-zA-Z]+/, "")
+          .trim(),
+      );
 
     if (error) throw error;
     res.json({ success: true });
@@ -533,7 +549,9 @@ app.post("/editar-contacto-prestador", async (req, res) => {
   try {
     const adminKey = req.headers["x-admin-key"];
     if (adminKey !== process.env.ADMIN_KEY) {
-      return res.status(403).json({ success: false, message: "No autorizado." });
+      return res
+        .status(403)
+        .json({ success: false, message: "No autorizado." });
     }
 
     const {
@@ -580,7 +598,9 @@ app.post("/resetear-password-prestador", async (req, res) => {
     const adminKey = req.headers["x-admin-key"];
 
     if (adminKey !== process.env.ADMIN_KEY) {
-      return res.status(403).json({ success: false, message: "No autorizado." });
+      return res
+        .status(403)
+        .json({ success: false, message: "No autorizado." });
     }
 
     const { data: prest } = await supabase
@@ -623,10 +643,15 @@ app.post("/resetear-password", async (req, res) => {
     const adminKey = req.headers["x-admin-key"];
 
     if (adminKey !== process.env.ADMIN_KEY) {
-      return res.status(403).json({ success: false, message: "No autorizado." });
+      return res
+        .status(403)
+        .json({ success: false, message: "No autorizado." });
     }
 
-    const dniNormalizado = dni.toString().replace(/^[a-zA-Z]+/, "").trim();
+    const dniNormalizado = dni
+      .toString()
+      .replace(/^[a-zA-Z]+/, "")
+      .trim();
 
     const { data: prof } = await supabase
       .from("profesionales")
@@ -1127,10 +1152,27 @@ app.post("/api/estudios-paciente", async (req, res) => {
       .order("fecha_carga", { ascending: false });
 
     (practicasInd || []).forEach((p) => {
-      const desc = (p.descripcion_practica || "").toLowerCase();
+      const desc = (p.descripcion_practica || "").toLowerCase().trim();
       if (DESCRIPCIONES_LABORATORIO.some((lab) => desc.includes(lab))) return;
 
-      const tipo = mapearTipoPractica(desc);
+      // No se muestran como "estudio" acá: son registros de facturación
+      // (Módulo Día Preventivo) o duplican lo que ya se ve en las tarjetas
+      // dedicadas de Enfermería/Odontología/Laboratorio bioquímico.
+      if (
+        desc === "módulo día preventivo" ||
+        desc === "práctica bioquímica" ||
+        desc === "consulta de enfermería" ||
+        desc === "consulta odontológica"
+      )
+        return;
+
+      // La consulta médica del Día Preventivo va en su propia categoría,
+      // no en "Otro".
+      const tipo =
+        desc === "consulta médica (día preventivo)"
+          ? "Consultas médicas"
+          : mapearTipoPractica(desc);
+
       estudiosEncontrados.push({
         TipoEstudio: tipo,
         DNI: p.dni,
@@ -1292,11 +1334,14 @@ function practicaResueltaPorHistorica(descLower, tiposHistoricosSet) {
   if (descLower.includes("eco") && descLower.includes("mam"))
     return tiposHistoricosSet.has("eco_mamaria");
   if (descLower.includes("ecograf")) return tiposHistoricosSet.has("ecografia");
-  if (descLower.includes("densito")) return tiposHistoricosSet.has("densitometria");
+  if (descLower.includes("densito"))
+    return tiposHistoricosSet.has("densitometria");
   if (descLower.includes("colon") || descLower.includes("vcc"))
     return tiposHistoricosSet.has("vcc");
-  if (descLower.includes("papanicolau")) return tiposHistoricosSet.has("papanicolau");
-  if (descLower.includes("espiro")) return tiposHistoricosSet.has("espirometria");
+  if (descLower.includes("papanicolau"))
+    return tiposHistoricosSet.has("papanicolau");
+  if (descLower.includes("espiro"))
+    return tiposHistoricosSet.has("espirometria");
   if (descLower.includes("biopsia")) return tiposHistoricosSet.has("biopsia");
   if (
     descLower.includes("oftalm") ||
@@ -1313,10 +1358,16 @@ function practicaResueltaPorHistorica(descLower, tiposHistoricosSet) {
 // sola excluye "clearence" y "rac"/"albumina" (RAC no tiene columna propia
 // hoy — ver nota más abajo).
 const CAMPOS_LABORATORIO = [
-  { test: (d) => d.includes("somf") || d.includes("sangre oculta"), campos: ["somf"] },
+  {
+    test: (d) => d.includes("somf") || d.includes("sangre oculta"),
+    campos: ["somf"],
+  },
   { test: (d) => d.includes("microalbuminuria"), campos: ["microalbuminuria"] },
   { test: (d) => d.includes("proteinuria"), campos: ["proteinuria"] },
-  { test: (d) => d.includes("hemoglobina glicosilada"), campos: ["hemoglobina_glicosilada"] },
+  {
+    test: (d) => d.includes("hemoglobina glicosilada"),
+    campos: ["hemoglobina_glicosilada"],
+  },
   { test: (d) => d.includes("clearence"), campos: ["clearence_creatinina"] },
   {
     test: (d) =>
@@ -1328,26 +1379,53 @@ const CAMPOS_LABORATORIO = [
     campos: ["creatinina"],
   },
   { test: (d) => d.includes("glucemia"), campos: ["glucemia"] },
-  { test: (d) => d.includes("trigliceridos") || d.includes("triglicéridos"), campos: ["trigliceridos"] },
+  {
+    test: (d) => d.includes("trigliceridos") || d.includes("triglicéridos"),
+    campos: ["trigliceridos"],
+  },
   { test: (d) => d.includes("hiv"), campos: ["hiv"] },
   { test: (d) => d.includes("vdrl"), campos: ["vdrl"] },
   { test: (d) => d.includes("psa"), campos: ["psa"] },
-  { test: (d) => d.includes("filtrado"), campos: ["indice_filtrado_glomerular"] },
+  {
+    test: (d) => d.includes("filtrado"),
+    campos: ["indice_filtrado_glomerular"],
+  },
   { test: (d) => d.includes("chagas"), campos: ["chagas_hai", "chagas_eclia"] },
-  { test: (d) => d.includes("hepatitis") && d.includes("antigeno"), campos: ["hepatitis_b_antigeno"] },
-  { test: (d) => d.includes("hepatitis b") && d.includes("core"), campos: ["hepatitis_b_anti_core"] },
+  {
+    test: (d) => d.includes("hepatitis") && d.includes("antigeno"),
+    campos: ["hepatitis_b_antigeno"],
+  },
+  {
+    test: (d) => d.includes("hepatitis b") && d.includes("core"),
+    campos: ["hepatitis_b_anti_core"],
+  },
   { test: (d) => d.includes("hepatitis c"), campos: ["hepatitis_c"] },
-  { test: (d) => d.includes("hpv"), campos: ["hpv_genotipo_16", "hpv_genotipo_18", "hpv_otros"] },
-  { test: (d) => d.includes("colesterol") && d.includes("total"), campos: ["colesterol_total"] },
-  { test: (d) => d.includes("colesterol") && d.includes("hdl"), campos: ["colesterol_hdl"] },
-  { test: (d) => d.includes("colesterol") && d.includes("ldl"), campos: ["colesterol_ldl"] },
+  {
+    test: (d) => d.includes("hpv"),
+    campos: ["hpv_genotipo_16", "hpv_genotipo_18", "hpv_otros"],
+  },
+  {
+    test: (d) => d.includes("colesterol") && d.includes("total"),
+    campos: ["colesterol_total"],
+  },
+  {
+    test: (d) => d.includes("colesterol") && d.includes("hdl"),
+    campos: ["colesterol_hdl"],
+  },
+  {
+    test: (d) => d.includes("colesterol") && d.includes("ldl"),
+    campos: ["colesterol_ldl"],
+  },
 ];
 
 function practicaResueltaPorLaboratorio(descLower, filasLab) {
   const regla = CAMPOS_LABORATORIO.find((r) => r.test(descLower));
   if (!regla) return false;
   return filasLab.some((fila) =>
-    regla.campos.some((campo) => fila[campo] !== null && fila[campo] !== undefined && fila[campo] !== ""),
+    regla.campos.some(
+      (campo) =>
+        fila[campo] !== null && fila[campo] !== undefined && fila[campo] !== "",
+    ),
   );
 }
 
@@ -1402,13 +1480,25 @@ app.get("/api/practicas-pendientes/:dni", async (req, res) => {
       queryHistoricas = queryHistoricas.gt("fecha", fechaUltimoCierre);
     }
 
-    const [{ data: practicas }, { data: enfermeria }, { data: odontologia }, { data: historicas }] =
-      await Promise.all([
-        queryAutorizadas,
-        supabase.from("enfermeria_consultas").select("id").eq("dni", dni).limit(1),
-        supabase.from("odontologia_consultas").select("id").eq("dni", dni).limit(1),
-        queryHistoricas,
-      ]);
+    const [
+      { data: practicas },
+      { data: enfermeria },
+      { data: odontologia },
+      { data: historicas },
+    ] = await Promise.all([
+      queryAutorizadas,
+      supabase
+        .from("enfermeria_consultas")
+        .select("id")
+        .eq("dni", dni)
+        .limit(1),
+      supabase
+        .from("odontologia_consultas")
+        .select("id")
+        .eq("dni", dni)
+        .limit(1),
+      queryHistoricas,
+    ]);
 
     const tieneEnfermeria = (enfermeria || []).length > 0;
     const tieneOdontologia = (odontologia || []).length > 0;
@@ -1418,7 +1508,9 @@ app.get("/api/practicas-pendientes/:dni", async (req, res) => {
         .map((h) => h.tipo_practica)
         .filter((t) => t && t !== "laboratorio"),
     );
-    const filasLab = (historicas || []).filter((h) => h.tipo_practica === "laboratorio");
+    const filasLab = (historicas || []).filter(
+      (h) => h.tipo_practica === "laboratorio",
+    );
 
     // Descripciones genéricas que se dan por resueltas si ya hubo consulta
     // real de enfermería u odontología, aunque su fila individual en
@@ -1434,9 +1526,15 @@ app.get("/api/practicas-pendientes/:dni", async (req, res) => {
 
     const pendientesFiltradas = (practicas || []).filter((p) => {
       const desc = (p.descripcion_practica || "").toLowerCase();
-      if (tieneEnfermeria && CUBIERTAS_POR_ENFERMERIA.some((k) => desc.includes(k)))
+      if (
+        tieneEnfermeria &&
+        CUBIERTAS_POR_ENFERMERIA.some((k) => desc.includes(k))
+      )
         return false;
-      if (tieneOdontologia && CUBIERTAS_POR_ODONTOLOGIA.some((k) => desc.includes(k)))
+      if (
+        tieneOdontologia &&
+        CUBIERTAS_POR_ODONTOLOGIA.some((k) => desc.includes(k))
+      )
         return false;
       if (practicaResueltaPorHistorica(desc, tiposHistoricosSet)) return false;
       if (practicaResueltaPorLaboratorio(desc, filasLab)) return false;
