@@ -1140,6 +1140,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
           ? new Date(p.fecha_carga).toISOString().split("T")[0]
           : "",
         Prestador: p.nombre_prestador || "",
+        Descripcion: p.descripcion_practica || "",
         Resultado: p.resultado_texto || "",
         LinkPDF: p.enlace_pdf || "",
         LinksPDF: p.enlace_pdf ? [p.enlace_pdf] : [],
