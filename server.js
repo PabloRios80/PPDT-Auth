@@ -1123,13 +1123,82 @@ app.post("/api/estudios-paciente", async (req, res) => {
       });
     });
 
-    // ── 4.5. ESTUDIOS DESDE HISTORIAL_DIA_PREVENTIVO (módulo del médico) ──
+    // ── 5. PRÁCTICAS INDIVIDUALES desde practicas_autorizadas ──
+    const DESCRIPCIONES_LABORATORIO = [
+      "glucemia",
+      "colesterol",
+      "creatinina",
+      "filtrado",
+      "trigliceridos",
+      "anti_vih",
+      "hepatitis",
+      "chagas",
+      "vdrl",
+      "psa",
+      "hpv",
+      "hemoglobina",
+      "microalbuminuria",
+      "proteinuria",
+      "clearence",
+      "somf",
+      "anticuerpos anti_v",
+    ];
+
+    const { data: practicasInd } = await supabase
+      .from("practicas_autorizadas")
+      .select("*")
+      .eq("dni", dniNormalizado)
+      .eq("estado", "REALIZADA")
+      .order("fecha_carga", { ascending: false });
+
+    (practicasInd || []).forEach((p) => {
+      const desc = (p.descripcion_practica || "").toLowerCase().trim();
+      if (DESCRIPCIONES_LABORATORIO.some((lab) => desc.includes(lab))) return;
+
+      // No se muestran como "estudio" acá: son registros de facturación
+      // (Módulo Día Preventivo) o duplican lo que ya se ve en las tarjetas
+      // dedicadas de Enfermería/Odontología/Laboratorio bioquímico.
+      if (
+        desc === "módulo día preventivo" ||
+        desc === "práctica bioquímica" ||
+        desc === "consulta de enfermería" ||
+        desc === "consulta odontológica"
+      )
+        return;
+
+      // La consulta médica del Día Preventivo va en su propia categoría,
+      // no en "Otro".
+      const tipo =
+        desc === "consulta médica (día preventivo)"
+          ? "Consultas médicas"
+          : mapearTipoPractica(desc);
+
+      estudiosEncontrados.push({
+        TipoEstudio: tipo,
+        DNI: p.dni,
+        Nombre: p.nombre_completo?.split(" ").slice(1).join(" ") || "",
+        Apellido: p.nombre_completo?.split(" ")[0] || "",
+        Fecha: p.fecha_carga
+          ? new Date(p.fecha_carga).toISOString().split("T")[0]
+          : "",
+        Prestador: p.nombre_prestador || "",
+        Descripcion: p.descripcion_practica || "",
+        Resultado: p.resultado_texto || "",
+        LinkPDF: p.enlace_pdf || "",
+        LinksPDF: p.enlace_pdf ? [p.enlace_pdf] : [],
+      });
+    });
+
+    // ── 6. RELLENO DESDE HISTORIAL_DIA_PREVENTIVO (módulo del médico) ──
+    // Va AL FINAL a propósito: recién acá sabemos con certeza qué prácticas
+    // ya tienen un registro real (PDF, prestador, resultado) por cualquiera
+    // de las otras 5 vías. Esto es solo relleno para lo que de verdad no
+    // esté en ningún lado más, para no duplicar cuando se carga el PDF real.
     // Acá carga el médico el resultado de cada estudio al cerrar el Día
     // Preventivo (y también aterriza la migración ATEM). Muchas veces la
     // práctica queda "AUTORIZADA" en practicas_autorizadas para siempre
     // porque nadie la pasa a REALIZADA, pero el resultado real está acá.
-    // Solo se agrega si el campo NO dice "No se realiza" (ni está vacío) y
-    // si esa práctica todavía no está cargada por otra vía, para no duplicar.
+    // "No se realiza" y "No aplica" cuentan como NO hecha.
     const { data: hdpRows } = await supabase
       .from("historial_dia_preventivo")
       .select(
@@ -1142,8 +1211,9 @@ app.post("/api/estudios-paciente", async (req, res) => {
       .limit(1);
 
     const hdp = (hdpRows || [])[0] || null;
+    const NO_HECHA = ["No se realiza", "No aplica"];
     const hdpHecha = (v) =>
-      v !== null && v !== undefined && v !== "" && v !== "No se realiza";
+      v !== null && v !== undefined && v !== "" && !NO_HECHA.includes(v);
     const tipoYaExiste = (tipo) =>
       estudiosEncontrados.some((e) => e.TipoEstudio === tipo);
     // Para "Laboratorio" no alcanza con mirar si la categoría existe (agrupa
@@ -1223,72 +1293,6 @@ app.post("/api/estudios-paciente", async (req, res) => {
         });
       });
     }
-
-    // ── 5. PRÁCTICAS INDIVIDUALES desde practicas_autorizadas ──
-    const DESCRIPCIONES_LABORATORIO = [
-      "glucemia",
-      "colesterol",
-      "creatinina",
-      "filtrado",
-      "trigliceridos",
-      "anti_vih",
-      "hepatitis",
-      "chagas",
-      "vdrl",
-      "psa",
-      "hpv",
-      "hemoglobina",
-      "microalbuminuria",
-      "proteinuria",
-      "clearence",
-      "somf",
-      "anticuerpos anti_v",
-    ];
-
-    const { data: practicasInd } = await supabase
-      .from("practicas_autorizadas")
-      .select("*")
-      .eq("dni", dniNormalizado)
-      .eq("estado", "REALIZADA")
-      .order("fecha_carga", { ascending: false });
-
-    (practicasInd || []).forEach((p) => {
-      const desc = (p.descripcion_practica || "").toLowerCase().trim();
-      if (DESCRIPCIONES_LABORATORIO.some((lab) => desc.includes(lab))) return;
-
-      // No se muestran como "estudio" acá: son registros de facturación
-      // (Módulo Día Preventivo) o duplican lo que ya se ve en las tarjetas
-      // dedicadas de Enfermería/Odontología/Laboratorio bioquímico.
-      if (
-        desc === "módulo día preventivo" ||
-        desc === "práctica bioquímica" ||
-        desc === "consulta de enfermería" ||
-        desc === "consulta odontológica"
-      )
-        return;
-
-      // La consulta médica del Día Preventivo va en su propia categoría,
-      // no en "Otro".
-      const tipo =
-        desc === "consulta médica (día preventivo)"
-          ? "Consultas médicas"
-          : mapearTipoPractica(desc);
-
-      estudiosEncontrados.push({
-        TipoEstudio: tipo,
-        DNI: p.dni,
-        Nombre: p.nombre_completo?.split(" ").slice(1).join(" ") || "",
-        Apellido: p.nombre_completo?.split(" ")[0] || "",
-        Fecha: p.fecha_carga
-          ? new Date(p.fecha_carga).toISOString().split("T")[0]
-          : "",
-        Prestador: p.nombre_prestador || "",
-        Descripcion: p.descripcion_practica || "",
-        Resultado: p.resultado_texto || "",
-        LinkPDF: p.enlace_pdf || "",
-        LinksPDF: p.enlace_pdf ? [p.enlace_pdf] : [],
-      });
-    });
 
     res.json({ success: true, estudios: estudiosEncontrados });
   } catch (e) {
