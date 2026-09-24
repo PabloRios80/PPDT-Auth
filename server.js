@@ -1324,24 +1324,23 @@ app.get("/verificar-afiliado/:dni", async (req, res) => {
     });
   }
 });
-// Reemplazo completo de app.get("/api/practicas-pendientes/:dni", ...)
-// (server.js líneas ~1285-1333)
+// Reemplazo COMPLETO de app.get("/api/practicas-pendientes/:dni", ...)
+// y de las funciones helper que lo acompañan.
+// URGENTE: reemplaza el bloque anterior (el que agregaba .gt("fecha_carga", ...))
+// porque ese filtro nunca funcionó -- fecha_carga es NULL en el 100% de las
+// filas AUTORIZADA de toda la base, así que estaba devolviendo listas vacías.
 
-// Tipos de practicas_historicas que resuelven una autorizada por nombre
-// (mismo criterio que mapearTipoPractica, ya usado en /api/estudios-paciente).
+// Tipos de practicas_historicas que resuelven una autorizada por nombre.
 function practicaResueltaPorHistorica(descLower, tiposHistoricosSet) {
   if (descLower.includes("mamog")) return tiposHistoricosSet.has("mamografia");
   if (descLower.includes("eco") && descLower.includes("mam"))
     return tiposHistoricosSet.has("eco_mamaria");
   if (descLower.includes("ecograf")) return tiposHistoricosSet.has("ecografia");
-  if (descLower.includes("densito"))
-    return tiposHistoricosSet.has("densitometria");
+  if (descLower.includes("densito")) return tiposHistoricosSet.has("densitometria");
   if (descLower.includes("colon") || descLower.includes("vcc"))
     return tiposHistoricosSet.has("vcc");
-  if (descLower.includes("papanicolau"))
-    return tiposHistoricosSet.has("papanicolau");
-  if (descLower.includes("espiro"))
-    return tiposHistoricosSet.has("espirometria");
+  if (descLower.includes("papanicolau")) return tiposHistoricosSet.has("papanicolau");
+  if (descLower.includes("espiro")) return tiposHistoricosSet.has("espirometria");
   if (descLower.includes("biopsia")) return tiposHistoricosSet.has("biopsia");
   if (
     descLower.includes("oftalm") ||
@@ -1352,22 +1351,12 @@ function practicaResueltaPorHistorica(descLower, tiposHistoricosSet) {
   return false;
 }
 
-// Descripciones de laboratorio -> columna(s) en practicas_historicas
-// (mismos campos que arma /api/estudios-paciente en todosLosValores).
-// OJO: "clearence" va ANTES que "creatinina" para no pisarlo, y "creatinina"
-// sola excluye "clearence" y "rac"/"albumina" (RAC no tiene columna propia
-// hoy — ver nota más abajo).
+// Descripciones de laboratorio -> columna(s) en practicas_historicas.
 const CAMPOS_LABORATORIO = [
-  {
-    test: (d) => d.includes("somf") || d.includes("sangre oculta"),
-    campos: ["somf"],
-  },
+  { test: (d) => d.includes("somf") || d.includes("sangre oculta"), campos: ["somf"] },
   { test: (d) => d.includes("microalbuminuria"), campos: ["microalbuminuria"] },
   { test: (d) => d.includes("proteinuria"), campos: ["proteinuria"] },
-  {
-    test: (d) => d.includes("hemoglobina glicosilada"),
-    campos: ["hemoglobina_glicosilada"],
-  },
+  { test: (d) => d.includes("hemoglobina glicosilada"), campos: ["hemoglobina_glicosilada"] },
   { test: (d) => d.includes("clearence"), campos: ["clearence_creatinina"] },
   {
     test: (d) =>
@@ -1379,54 +1368,57 @@ const CAMPOS_LABORATORIO = [
     campos: ["creatinina"],
   },
   { test: (d) => d.includes("glucemia"), campos: ["glucemia"] },
-  {
-    test: (d) => d.includes("trigliceridos") || d.includes("triglicéridos"),
-    campos: ["trigliceridos"],
-  },
+  { test: (d) => d.includes("trigliceridos") || d.includes("triglicéridos"), campos: ["trigliceridos"] },
   { test: (d) => d.includes("hiv"), campos: ["hiv"] },
   { test: (d) => d.includes("vdrl"), campos: ["vdrl"] },
   { test: (d) => d.includes("psa"), campos: ["psa"] },
-  {
-    test: (d) => d.includes("filtrado"),
-    campos: ["indice_filtrado_glomerular"],
-  },
+  { test: (d) => d.includes("filtrado"), campos: ["indice_filtrado_glomerular"] },
   { test: (d) => d.includes("chagas"), campos: ["chagas_hai", "chagas_eclia"] },
-  {
-    test: (d) => d.includes("hepatitis") && d.includes("antigeno"),
-    campos: ["hepatitis_b_antigeno"],
-  },
-  {
-    test: (d) => d.includes("hepatitis b") && d.includes("core"),
-    campos: ["hepatitis_b_anti_core"],
-  },
+  { test: (d) => d.includes("hepatitis") && d.includes("antigeno"), campos: ["hepatitis_b_antigeno"] },
+  { test: (d) => d.includes("hepatitis b") && d.includes("core"), campos: ["hepatitis_b_anti_core"] },
   { test: (d) => d.includes("hepatitis c"), campos: ["hepatitis_c"] },
-  {
-    test: (d) => d.includes("hpv"),
-    campos: ["hpv_genotipo_16", "hpv_genotipo_18", "hpv_otros"],
-  },
-  {
-    test: (d) => d.includes("colesterol") && d.includes("total"),
-    campos: ["colesterol_total"],
-  },
-  {
-    test: (d) => d.includes("colesterol") && d.includes("hdl"),
-    campos: ["colesterol_hdl"],
-  },
-  {
-    test: (d) => d.includes("colesterol") && d.includes("ldl"),
-    campos: ["colesterol_ldl"],
-  },
+  { test: (d) => d.includes("hpv"), campos: ["hpv_genotipo_16", "hpv_genotipo_18", "hpv_otros"] },
+  { test: (d) => d.includes("colesterol") && d.includes("total"), campos: ["colesterol_total"] },
+  { test: (d) => d.includes("colesterol") && d.includes("hdl"), campos: ["colesterol_hdl"] },
+  { test: (d) => d.includes("colesterol") && d.includes("ldl"), campos: ["colesterol_ldl"] },
 ];
 
 function practicaResueltaPorLaboratorio(descLower, filasLab) {
   const regla = CAMPOS_LABORATORIO.find((r) => r.test(descLower));
   if (!regla) return false;
   return filasLab.some((fila) =>
-    regla.campos.some(
-      (campo) =>
-        fila[campo] !== null && fila[campo] !== undefined && fila[campo] !== "",
-    ),
+    regla.campos.some((campo) => fila[campo] !== null && fila[campo] !== undefined && fila[campo] !== ""),
   );
+}
+
+// Cruce contra historial_dia_preventivo (carga del médico en el módulo del
+// Día Preventivo + migración ATEM). Un valor distinto de null y de
+// "No se realiza" significa que la práctica se hizo, sea cual sea el
+// resultado.
+// OJO: el campo "erc" (enfermedad renal crónica) queda AFUERA a propósito:
+// mezcla microalbuminuria/RAC/filtrado glomerular en un solo valor y hay
+// casos con datos cargados de forma inconsistente (valor numérico en la
+// observación pero categoría en "No se realiza"). Esas 3 prácticas se
+// siguen resolviendo únicamente contra practicas_historicas/estado.
+function practicaResueltaPorHDP(descLower, hdp) {
+  if (!hdp) return false;
+  const hecha = (v) => v !== null && v !== undefined && v !== "" && v !== "No se realiza";
+
+  if (descLower.includes("somf") || descLower.includes("sangre oculta")) return hecha(hdp.somf);
+  if (descLower.includes("colon") || descLower.includes("vcc"))
+    return hecha(hdp.cancer_colon_colonoscopia);
+  if (descLower.includes("mamog")) return hecha(hdp.cancer_mama_mamografia);
+  if (descLower.includes("eco") && descLower.includes("mam")) return hecha(hdp.cancer_mama_eco_mamaria);
+  if (descLower.includes("densito")) return hecha(hdp.osteoporosis);
+  if (descLower.includes("papanicolau")) return hecha(hdp.cancer_cervico_pap);
+  if (descLower.includes("hpv")) return hecha(hdp.cancer_cervico_hpv);
+  if (descLower.includes("hepatitis") && descLower.includes("b")) return hecha(hdp.hepatitis_b);
+  if (descLower.includes("hepatitis") && descLower.includes("c")) return hecha(hdp.hepatitis_c);
+  if (descLower.includes("vih") || descLower.includes("hiv")) return hecha(hdp.vih);
+  if (descLower.includes("vdrl")) return hecha(hdp.vdrl);
+  if (descLower.includes("chagas")) return hecha(hdp.chagas);
+  if (descLower.includes("psa")) return hecha(hdp.prostata_psa);
+  return false;
 }
 
 // Prácticas pendientes por DNI
@@ -1438,66 +1430,40 @@ app.get("/api/practicas-pendientes/:dni", async (req, res) => {
 
     const dni = req.params.dni;
 
-    // Límite del ciclo vigente: todo lo autorizado ANTES del último Día
-    // Preventivo cerrado es de un ciclo viejo y no debe contar como
-    // pendiente actual, aunque nunca se haya marcado REALIZADA.
-    let fechaUltimoCierre = null;
-    try {
-      const { data: ultimoCierre } = await supabase
-        .from("historial_dia_preventivo")
-        .select("fechax")
-        .eq("dni", dni)
-        .order("fechax", { ascending: false })
-        .limit(1)
-        .single();
-      fechaUltimoCierre = ultimoCierre?.fechax || null;
-    } catch (e) {
-      // Sin cierre previo (primer DP del afiliado): no hay límite, se
-      // consideran todas las autorizadas existentes.
-      fechaUltimoCierre = null;
-    }
-
-    let queryAutorizadas = supabase
-      .from("practicas_autorizadas")
-      .select("descripcion_practica, codigo_prestacion")
-      .eq("dni", dni)
-      .eq("estado", "AUTORIZADA");
-    if (fechaUltimoCierre) {
-      queryAutorizadas = queryAutorizadas.gt("fecha_carga", fechaUltimoCierre);
-    }
-
-    let queryHistoricas = supabase
-      .from("practicas_historicas")
-      .select(
-        "tipo_practica, somf, microalbuminuria, proteinuria, hemoglobina_glicosilada, " +
-          "clearence_creatinina, creatinina, glucemia, trigliceridos, hiv, vdrl, psa, " +
-          "indice_filtrado_glomerular, chagas_hai, chagas_eclia, hepatitis_b_antigeno, " +
-          "hepatitis_b_anti_core, hepatitis_c, hpv_genotipo_16, hpv_genotipo_18, hpv_otros, " +
-          "colesterol_total, colesterol_hdl, colesterol_ldl",
-      )
-      .eq("dni", dni);
-    if (fechaUltimoCierre) {
-      queryHistoricas = queryHistoricas.gt("fecha", fechaUltimoCierre);
-    }
-
     const [
       { data: practicas },
       { data: enfermeria },
       { data: odontologia },
       { data: historicas },
+      { data: hdpRows },
     ] = await Promise.all([
-      queryAutorizadas,
       supabase
-        .from("enfermeria_consultas")
-        .select("id")
+        .from("practicas_autorizadas")
+        .select("descripcion_practica, codigo_prestacion")
         .eq("dni", dni)
-        .limit(1),
+        .eq("estado", "AUTORIZADA"),
+      supabase.from("enfermeria_consultas").select("id").eq("dni", dni).limit(1),
+      supabase.from("odontologia_consultas").select("id").eq("dni", dni).limit(1),
       supabase
-        .from("odontologia_consultas")
-        .select("id")
+        .from("practicas_historicas")
+        .select(
+          "tipo_practica, somf, microalbuminuria, proteinuria, hemoglobina_glicosilada, " +
+            "clearence_creatinina, creatinina, glucemia, trigliceridos, hiv, vdrl, psa, " +
+            "indice_filtrado_glomerular, chagas_hai, chagas_eclia, hepatitis_b_antigeno, " +
+            "hepatitis_b_anti_core, hepatitis_c, hpv_genotipo_16, hpv_genotipo_18, hpv_otros, " +
+            "colesterol_total, colesterol_hdl, colesterol_ldl",
+        )
+        .eq("dni", dni),
+      supabase
+        .from("historial_dia_preventivo")
+        .select(
+          "somf, cancer_colon_colonoscopia, cancer_mama_mamografia, cancer_mama_eco_mamaria, " +
+            "osteoporosis, cancer_cervico_pap, cancer_cervico_hpv, hepatitis_b, hepatitis_c, " +
+            "vih, vdrl, chagas, prostata_psa, fechax",
+        )
         .eq("dni", dni)
+        .order("fechax", { ascending: false })
         .limit(1),
-      queryHistoricas,
     ]);
 
     const tieneEnfermeria = (enfermeria || []).length > 0;
@@ -1508,13 +1474,9 @@ app.get("/api/practicas-pendientes/:dni", async (req, res) => {
         .map((h) => h.tipo_practica)
         .filter((t) => t && t !== "laboratorio"),
     );
-    const filasLab = (historicas || []).filter(
-      (h) => h.tipo_practica === "laboratorio",
-    );
+    const filasLab = (historicas || []).filter((h) => h.tipo_practica === "laboratorio");
+    const hdp = (hdpRows || [])[0] || null;
 
-    // Descripciones genéricas que se dan por resueltas si ya hubo consulta
-    // real de enfermería u odontología, aunque su fila individual en
-    // practicas_autorizadas nunca pase a REALIZADA.
     const CUBIERTAS_POR_ENFERMERIA = [
       "tomar ta",
       "calcular imc",
@@ -1526,18 +1488,13 @@ app.get("/api/practicas-pendientes/:dni", async (req, res) => {
 
     const pendientesFiltradas = (practicas || []).filter((p) => {
       const desc = (p.descripcion_practica || "").toLowerCase();
-      if (
-        tieneEnfermeria &&
-        CUBIERTAS_POR_ENFERMERIA.some((k) => desc.includes(k))
-      )
+      if (tieneEnfermeria && CUBIERTAS_POR_ENFERMERIA.some((k) => desc.includes(k)))
         return false;
-      if (
-        tieneOdontologia &&
-        CUBIERTAS_POR_ODONTOLOGIA.some((k) => desc.includes(k))
-      )
+      if (tieneOdontologia && CUBIERTAS_POR_ODONTOLOGIA.some((k) => desc.includes(k)))
         return false;
       if (practicaResueltaPorHistorica(desc, tiposHistoricosSet)) return false;
       if (practicaResueltaPorLaboratorio(desc, filasLab)) return false;
+      if (practicaResueltaPorHDP(desc, hdp)) return false;
       return true;
     });
 
