@@ -1228,8 +1228,11 @@ app.post("/api/estudios-paciente", async (req, res) => {
     const labYaCubre = (...claves) => claves.some((c) => clavesLabCubiertas.has(c));
 
     if (hdp) {
+      // Solo estudios de imagen con categoría propia. Los analitos de
+      // laboratorio (SOMF, HPV, hepatitis, VIH, VDRL, Chagas, PSA) quedan
+      // afuera a propósito: el médico del cierre no es quien hizo el
+      // análisis, y esa info ya está representada en "Consultas médicas".
       const CANDIDATOS_HDP = [
-        { tipo: "Laboratorio", resultado: hdp.somf, cubierto: labYaCubre("SOMF") },
         {
           tipo: "Mamografia",
           resultado: hdp.cancer_mama_mamografia,
@@ -1256,29 +1259,6 @@ app.post("/api/estudios-paciente", async (req, res) => {
           resultado: hdp.cancer_cervico_pap,
           cubierto: tipoYaExiste("Papanicolau"),
         },
-        {
-          tipo: "Laboratorio",
-          resultado: hdp.cancer_cervico_hpv,
-          cubierto: labYaCubre("HPV Genotipo 16", "HPV Genotipo 18", "HPV Otros Genotipos Alto Riesgo"),
-        },
-        {
-          tipo: "Laboratorio",
-          resultado: hdp.hepatitis_b,
-          cubierto: labYaCubre("Hepatitis B Antígeno Superficie", "Hepatitis B Anti Core"),
-        },
-        {
-          tipo: "Laboratorio",
-          resultado: hdp.hepatitis_c,
-          cubierto: labYaCubre("Hepatitis C"),
-        },
-        { tipo: "Laboratorio", resultado: hdp.vih, cubierto: labYaCubre("HIV") },
-        { tipo: "Laboratorio", resultado: hdp.vdrl, cubierto: labYaCubre("VDRL") },
-        {
-          tipo: "Laboratorio",
-          resultado: hdp.chagas,
-          cubierto: labYaCubre("Chagas HAI", "Chagas ECLIA"),
-        },
-        { tipo: "Laboratorio", resultado: hdp.prostata_psa, cubierto: labYaCubre("PSA") },
       ];
 
       CANDIDATOS_HDP.forEach((c) => {
