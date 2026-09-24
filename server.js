@@ -1123,6 +1123,107 @@ app.post("/api/estudios-paciente", async (req, res) => {
       });
     });
 
+    // ── 4.5. ESTUDIOS DESDE HISTORIAL_DIA_PREVENTIVO (módulo del médico) ──
+    // Acá carga el médico el resultado de cada estudio al cerrar el Día
+    // Preventivo (y también aterriza la migración ATEM). Muchas veces la
+    // práctica queda "AUTORIZADA" en practicas_autorizadas para siempre
+    // porque nadie la pasa a REALIZADA, pero el resultado real está acá.
+    // Solo se agrega si el campo NO dice "No se realiza" (ni está vacío) y
+    // si esa práctica todavía no está cargada por otra vía, para no duplicar.
+    const { data: hdpRows } = await supabase
+      .from("historial_dia_preventivo")
+      .select(
+        "somf, cancer_colon_colonoscopia, cancer_mama_mamografia, cancer_mama_eco_mamaria, " +
+          "osteoporosis, obs_osteoporosis, cancer_cervico_pap, cancer_cervico_hpv, hepatitis_b, " +
+          "hepatitis_c, vih, vdrl, chagas, prostata_psa, fechax, profesional",
+      )
+      .eq("dni", dniNormalizado)
+      .order("fechax", { ascending: false })
+      .limit(1);
+
+    const hdp = (hdpRows || [])[0] || null;
+    const hdpHecha = (v) =>
+      v !== null && v !== undefined && v !== "" && v !== "No se realiza";
+    const tipoYaExiste = (tipo) =>
+      estudiosEncontrados.some((e) => e.TipoEstudio === tipo);
+    // Para "Laboratorio" no alcanza con mirar si la categoría existe (agrupa
+    // muchos analitos): hay que ver si ESE analito puntual ya tiene valor.
+    const clavesLabCubiertas = new Set();
+    estudiosEncontrados.forEach((e) => {
+      if (e.ResultadosLaboratorio)
+        Object.keys(e.ResultadosLaboratorio).forEach((k) =>
+          clavesLabCubiertas.add(k),
+        );
+    });
+    const labYaCubre = (...claves) => claves.some((c) => clavesLabCubiertas.has(c));
+
+    if (hdp) {
+      const CANDIDATOS_HDP = [
+        { tipo: "Laboratorio", resultado: hdp.somf, cubierto: labYaCubre("SOMF") },
+        {
+          tipo: "Mamografia",
+          resultado: hdp.cancer_mama_mamografia,
+          cubierto: tipoYaExiste("Mamografia"),
+        },
+        {
+          tipo: "Eco mamaria",
+          resultado: hdp.cancer_mama_eco_mamaria,
+          cubierto: tipoYaExiste("Eco mamaria"),
+        },
+        {
+          tipo: "Densitometria",
+          resultado: hdp.osteoporosis,
+          obs: hdp.obs_osteoporosis,
+          cubierto: tipoYaExiste("Densitometria"),
+        },
+        {
+          tipo: "VCC",
+          resultado: hdp.cancer_colon_colonoscopia,
+          cubierto: tipoYaExiste("VCC"),
+        },
+        {
+          tipo: "Papanicolau",
+          resultado: hdp.cancer_cervico_pap,
+          cubierto: tipoYaExiste("Papanicolau"),
+        },
+        {
+          tipo: "Laboratorio",
+          resultado: hdp.cancer_cervico_hpv,
+          cubierto: labYaCubre("HPV Genotipo 16", "HPV Genotipo 18", "HPV Otros Genotipos Alto Riesgo"),
+        },
+        {
+          tipo: "Laboratorio",
+          resultado: hdp.hepatitis_b,
+          cubierto: labYaCubre("Hepatitis B Antígeno Superficie", "Hepatitis B Anti Core"),
+        },
+        {
+          tipo: "Laboratorio",
+          resultado: hdp.hepatitis_c,
+          cubierto: labYaCubre("Hepatitis C"),
+        },
+        { tipo: "Laboratorio", resultado: hdp.vih, cubierto: labYaCubre("HIV") },
+        { tipo: "Laboratorio", resultado: hdp.vdrl, cubierto: labYaCubre("VDRL") },
+        {
+          tipo: "Laboratorio",
+          resultado: hdp.chagas,
+          cubierto: labYaCubre("Chagas HAI", "Chagas ECLIA"),
+        },
+        { tipo: "Laboratorio", resultado: hdp.prostata_psa, cubierto: labYaCubre("PSA") },
+      ];
+
+      CANDIDATOS_HDP.forEach((c) => {
+        if (!hdpHecha(c.resultado) || c.cubierto) return;
+        estudiosEncontrados.push({
+          TipoEstudio: c.tipo,
+          DNI: dniNormalizado,
+          Fecha: hdp.fechax || "",
+          Prestador: hdp.profesional || "",
+          Resultado: c.resultado,
+          Observaciones: c.obs || "",
+        });
+      });
+    }
+
     // ── 5. PRÁCTICAS INDIVIDUALES desde practicas_autorizadas ──
     const DESCRIPCIONES_LABORATORIO = [
       "glucemia",
@@ -1484,7 +1585,7 @@ app.get("/api/practicas-pendientes/:dni", async (req, res) => {
       "control vision",
       "control visión",
     ];
-    const CUBIERTAS_POR_ODONTOLOGIA = ["odontolog"];
+    const CUBIERTAS_POR_ODONTOLOGIA = ["odontolog", "odontológ"];
 
     const pendientesFiltradas = (practicas || []).filter((p) => {
       const desc = (p.descripcion_practica || "").toLowerCase();
