@@ -11,6 +11,9 @@ const agenteIapos = new https.Agent({ rejectUnauthorized: false });
 const app = express();
 const PORT = process.env.PORT || 3004;
 const JWT_SECRET = process.env.JWT_SECRET || "iapos_dp_secret_2025";
+// Secreto aparte para coordinadores institucionales (ministerios): sus
+// tokens NO son válidos en ninguna otra app, solo en el panel del CRM.
+const JWT_SECRET_COORD = process.env.JWT_SECRET_COORD; // sin fallback a propósito
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -246,6 +249,47 @@ app.post("/login", async (req, res) => {
     }
 
     if (!profesional) {
+      // ── Coordinadores institucionales (ministerios/secretarías) ──
+      const { data: coord } = await supabase
+        .from("coordinadores_institucionales")
+        .select("*")
+        .eq("usuario", usuario)
+        .eq("activo", true)
+        .maybeSingle();
+
+      if (
+        coord &&
+        JWT_SECRET_COORD &&
+        (await bcrypt.compare(password, coord.password_hash))
+      ) {
+        await supabase
+          .from("coordinadores_institucionales")
+          .update({ ultimo_acceso: new Date().toISOString() })
+          .eq("id", coord.id);
+
+        const tokenCoord = jwt.sign(
+          {
+            id: coord.id,
+            usuario: coord.usuario,
+            tipo: "coordinador_institucional",
+          },
+          JWT_SECRET_COORD,
+          { expiresIn: "8h" },
+        );
+        return res.json({
+          success: true,
+          token: tokenCoord,
+          debe_cambiar_password: coord.debe_cambiar_password,
+          profesional: {
+            nombre: `${coord.nombre || ""} ${coord.apellido || ""}`.trim(),
+            apellido: "",
+            rol: "coordinador_institucional",
+            profesion: "coordinador_institucional",
+            id_sede_dp: null,
+          },
+        });
+      }
+
       return res.json({
         success: false,
         message: "Usuario o contraseña incorrectos.",
@@ -340,6 +384,7 @@ app.post("/cambiar-password", async (req, res) => {
     // Buscar en profesionales primero
     let profesional = null;
     let esPrestador = false;
+    let esCoordinador = false;
 
     const { data: prof } = await supabase
       .from("profesionales")
@@ -360,6 +405,17 @@ app.post("/cambiar-password", async (req, res) => {
       if (prest) {
         profesional = prest;
         esPrestador = true;
+      } else {
+        const { data: coord } = await supabase
+          .from("coordinadores_institucionales")
+          .select("*")
+          .eq("usuario", usuario)
+          .eq("activo", true)
+          .maybeSingle();
+        if (coord) {
+          profesional = coord;
+          esCoordinador = true;
+        }
       }
     }
 
@@ -378,7 +434,11 @@ app.post("/cambiar-password", async (req, res) => {
 
     const nuevoHash = await bcrypt.hash(password_nuevo, 10);
 
-    const tabla = esPrestador ? "prestadores_institucionales" : "profesionales";
+    const tabla = esCoordinador
+      ? "coordinadores_institucionales"
+      : esPrestador
+        ? "prestadores_institucionales"
+        : "profesionales";
     await supabase
       .from(tabla)
       .update({ password_hash: nuevoHash, debe_cambiar_password: false })
