@@ -762,6 +762,9 @@ app.get("/solicitudes-pendientes", async (req, res) => {
         "dni, nombre, apellido, profesion, email, telefono, matricula, universidad, fecha_solicitud",
       )
       .eq("activo", false)
+      // Solo solicitudes nuevas (nunca aprobadas). Los desactivados tienen
+      // fecha_alta y se muestran en Aprobados con el botón Reactivar.
+      .is("fecha_alta", null)
       .order("fecha_solicitud", { ascending: false });
 
     res.json({ success: true, solicitudes: data || [] });
@@ -780,9 +783,11 @@ app.get("/usuarios-aprobados", async (req, res) => {
     const { data } = await supabase
       .from("profesionales")
       .select(
-        "dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp, telefono, email, matricula, puede_cerrar_interno, puede_derivar, es_superuser",
+        "dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp, telefono, email, matricula, puede_cerrar_interno, puede_derivar, es_superuser, activo",
       )
-      .eq("activo", true)
+      // Activos y desactivados (los desactivados tienen fecha_alta).
+      .not("fecha_alta", "is", null)
+      .order("activo", { ascending: false })
       .order("fecha_alta", { ascending: false });
 
     res.json({ success: true, profesionales: data || [] });
@@ -821,6 +826,39 @@ app.post("/desactivar-usuario", async (req, res) => {
   }
 });
 
+// ── REACTIVAR USUARIO ──
+// Vuelve a habilitar a un profesional desactivado conservando usuario,
+// contraseña, sede y permisos. Solo aplica a usuarios que ya fueron
+// aprobados alguna vez (fecha_alta no nula): no sirve para aprobar
+// solicitudes nuevas, que siguen yendo por /aprobar-usuario.
+app.post("/reactivar-usuario", async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    if (adminKey !== process.env.ADMIN_KEY)
+      return res.status(403).json({ success: false });
+
+    const { data, error } = await supabase
+      .from("profesionales")
+      .update({ activo: true })
+      .eq("dni", req.body.dni)
+      .eq("activo", false)
+      .not("fecha_alta", "is", null)
+      .select("usuario");
+    if (error) throw error;
+    if (!data || data.length === 0)
+      return res.json({
+        success: false,
+        message: "No se encontró un usuario desactivado con ese DNI.",
+      });
+
+    console.log(`♻️ Usuario reactivado: ${data[0].usuario}`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error en /reactivar-usuario:", error.message);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ── LISTAR PRESTADORES PENDIENTES ──
 app.get("/prestadores-pendientes", async (req, res) => {
   try {
@@ -832,6 +870,8 @@ app.get("/prestadores-pendientes", async (req, res) => {
       .from("prestadores_institucionales")
       .select("*")
       .eq("activo", false)
+      // Solo solicitudes nuevas; los desactivados van en Aprobados.
+      .is("fecha_alta", null)
       .order("fecha_solicitud", { ascending: false });
 
     res.json({ success: true, prestadores: data || [] });
@@ -950,9 +990,12 @@ app.get("/prestadores-aprobados", async (req, res) => {
     const { data } = await supabase
       .from("prestadores_institucionales")
       .select(
-        "id, nombre_institucion, especialidad, usuario, rol, fecha_alta, telefono, mail, cuit, direccion, localidad, provincia, nombre_responsable, matricula_responsable, telefono_responsable, mail_responsable",
+        "id, nombre_institucion, especialidad, usuario, rol, fecha_alta, telefono, mail, cuit, direccion, localidad, provincia, nombre_responsable, matricula_responsable, telefono_responsable, mail_responsable, activo",
       )
-      .eq("activo", true)
+      // Activos (aunque no tengan fecha_alta, hay alguno viejo así)
+      // y desactivados que alguna vez fueron aprobados.
+      .or("activo.eq.true,fecha_alta.not.is.null")
+      .order("activo", { ascending: false })
       .order("fecha_alta", { ascending: false });
 
     res.json({ success: true, prestadores: data || [] });
@@ -973,6 +1016,35 @@ app.post("/desactivar-prestador", async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     res.status(500).json({ success: false });
+  }
+});
+
+// ── REACTIVAR PRESTADOR ──
+app.post("/reactivar-prestador", async (req, res) => {
+  try {
+    const adminKey = req.headers["x-admin-key"];
+    if (adminKey !== process.env.ADMIN_KEY)
+      return res.status(403).json({ success: false });
+
+    const { data, error } = await supabase
+      .from("prestadores_institucionales")
+      .update({ activo: true })
+      .eq("id", req.body.id)
+      .eq("activo", false)
+      .not("fecha_alta", "is", null)
+      .select("usuario");
+    if (error) throw error;
+    if (!data || data.length === 0)
+      return res.json({
+        success: false,
+        message: "No se encontró un prestador desactivado con ese id.",
+      });
+
+    console.log(`♻️ Prestador reactivado: ${data[0].usuario}`);
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error en /reactivar-prestador:", error.message);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 // ── ENDPOINT CENTRALIZADO: /api/estudios-paciente ──

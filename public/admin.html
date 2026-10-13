@@ -180,6 +180,20 @@
               </div>
               <div>
                 <label class="text-xs font-bold text-gray-500 block mb-1"
+                  >Estado</label
+                >
+                <select
+                  id="filtroEstado"
+                  class="border border-gray-300 rounded-lg px-2 py-2 text-sm"
+                  onchange="aplicarFiltrosAprobados()"
+                >
+                  <option value="">Todos</option>
+                  <option value="activos">Activos</option>
+                  <option value="inactivos">Desactivados</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-xs font-bold text-gray-500 block mb-1"
                   >Rol</label
                 >
                 <select
@@ -519,9 +533,14 @@
         const rolSel = document.getElementById("filtroRol").value;
         const profesionSel = document.getElementById("filtroProfesion").value;
         const sedeSel = document.getElementById("filtroSede").value;
+        const estadoSel = document.getElementById("filtroEstado").value;
+        const pasaEstado = (p) =>
+          !estadoSel ||
+          (estadoSel === "activos" ? p.activo !== false : p.activo === false);
 
         const profesionalesFiltrados = aprobadosRaw.profesionales.filter(
           (p) => {
+            if (!pasaEstado(p)) return false;
             if (rolSel && p.rol !== rolSel) return false;
             if (profesionSel && p.profesion !== profesionSel) return false;
             if (sedeSel && String(p.id_sede_dp || "") !== sedeSel) return false;
@@ -536,7 +555,7 @@
 
         renderAprobados(
           profesionalesFiltrados,
-          aprobadosRaw.prestadores,
+          aprobadosRaw.prestadores.filter(pasaEstado),
           aprobadosRaw.sedes,
         );
       }
@@ -558,6 +577,35 @@
             ? new Date(p.fecha_alta).toLocaleDateString("es-AR")
             : "-";
           const sedeActual = p.id_sede_dp || "";
+          const inactivo = p.activo === false;
+          if (inactivo) {
+            lista.innerHTML += `
+      <div class="bg-gray-50 rounded-xl shadow p-4 border border-gray-200 opacity-80">
+          <div class="flex justify-between items-start flex-wrap gap-3">
+              <div>
+                  <p class="font-bold text-gray-500">${p.apellido}, ${p.nombre}</p>
+                  <p class="text-sm text-gray-400">${p.profesion} · ${p.usuario} · Rol: ${p.rol}</p>
+                  <p class="text-xs text-gray-400">Alta: ${fecha}</p>
+              </div>
+              <div class="flex flex-wrap gap-2 items-center">
+                  <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full font-medium">Desactivado</span>
+                  <button onclick='abrirTarjeta(${JSON.stringify(p)})'
+                      class="px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-300 text-blue-700 hover:bg-blue-50">
+                      <i class="fas fa-id-card mr-1"></i>Tarjeta datos
+                  </button>
+                  <button onclick="reactivar('${p.dni}', '${(p.nombre + " " + p.apellido).replace(/'/g, "\\'")}')"
+                      class="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">
+                      <i class="fas fa-undo mr-1"></i>Reactivar
+                  </button>
+                  <button onclick="eliminar('${p.dni}')"
+                      class="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-300 text-red-600 hover:bg-red-50">
+                      <i class="fas fa-trash mr-1"></i>Eliminar
+                  </button>
+              </div>
+          </div>
+      </div>`;
+            return;
+          }
           lista.innerHTML += `
       <div class="bg-white rounded-xl shadow p-4 border border-gray-100">
           <div class="flex justify-between items-start flex-wrap gap-3">
@@ -603,6 +651,32 @@
           const fecha = p.fecha_alta
             ? new Date(p.fecha_alta).toLocaleDateString("es-AR")
             : "-";
+          if (p.activo === false) {
+            lista.innerHTML += `
+      <div class="bg-gray-50 rounded-xl shadow p-4 border border-gray-200 opacity-80 flex justify-between items-center flex-wrap gap-2">
+          <div>
+              <p class="font-bold text-gray-500">${p.nombre_institucion}</p>
+              <p class="text-sm text-gray-400">${p.especialidad} · ${p.usuario}</p>
+              <p class="text-xs text-gray-400">Alta: ${fecha}</p>
+          </div>
+          <div class="flex gap-2 items-center flex-wrap">
+              <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full font-medium">Prestador desactivado</span>
+              <button onclick='abrirTarjeta(${JSON.stringify(p)}, "prestador")'
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold border border-blue-300 text-blue-700 hover:bg-blue-50">
+                  <i class="fas fa-id-card mr-1"></i>Tarjeta datos
+              </button>
+              <button onclick="reactivarPrestador(${p.id}, '${p.nombre_institucion.replace(/'/g, "\\'")}')"
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold bg-green-600 text-white hover:bg-green-700">
+                  <i class="fas fa-undo mr-1"></i>Reactivar
+              </button>
+              <button onclick="eliminarPrestador(${p.id})"
+                  class="px-3 py-1.5 rounded-lg text-xs font-bold border border-red-300 text-red-600 hover:bg-red-50">
+                  <i class="fas fa-trash mr-1"></i>Eliminar
+              </button>
+          </div>
+      </div>`;
+            return;
+          }
           lista.innerHTML += `
       <div class="bg-white rounded-xl shadow p-4 border border-blue-50 flex justify-between items-center flex-wrap gap-2">
           <div>
@@ -1364,6 +1438,43 @@
         cargarAprobados();
       }
 
+      async function reactivar(dni, nombreCompleto) {
+        if (
+          !confirm(
+            `¿Reactivar a ${nombreCompleto}? Vuelve a entrar con su mismo usuario y contraseña.`,
+          )
+        )
+          return;
+        const res = await fetch("/reactivar-usuario", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminKey,
+          },
+          body: JSON.stringify({ dni }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!data.success)
+          alert(data.message || "No se pudo reactivar el usuario.");
+        cargarAprobados();
+      }
+
+      async function reactivarPrestador(id, nombre) {
+        if (!confirm(`¿Reactivar el prestador ${nombre}?`)) return;
+        const res = await fetch("/reactivar-prestador", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-key": adminKey,
+          },
+          body: JSON.stringify({ id }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!data.success)
+          alert(data.message || "No se pudo reactivar el prestador.");
+        cargarAprobados();
+      }
+
       async function eliminar(dni) {
         if (
           !confirm(
@@ -1382,7 +1493,8 @@
         cargarAprobados();
       }
       async function desactivarPrestador(id) {
-        if (!confirm("¿Desactivar este prestador?")) return;
+        if (!confirm("¿Desactivar este prestador? Podrás reactivarlo después."))
+          return;
         await fetch("/desactivar-prestador", {
           method: "POST",
           headers: {
