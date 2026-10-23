@@ -1047,6 +1047,24 @@ app.post("/reactivar-prestador", async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 });
+// ¿El valor cargado en historial_dia_preventivo indica que el estudio SE HIZO?
+// En la base conviven "No se realiza" y "No se Realiza" (la mayúscula viene de
+// la migración ATEM, más de 130 mil filas), "-" (planillas migradas, sin dato),
+// "No aplica" y "Pendiente" (indicado pero no realizado): ninguno cuenta como
+// hecho. Se compara sin mayúsculas ni tildes.
+// OJO: en osteoporosis "No se verifica" SÍ es estudio hecho (densitometría sin
+// osteoporosis), por eso no está en la lista.
+const HDP_NO_HECHO = ["", "-", "no se realiza", "no aplica", "pendiente"];
+function resultadoHDPHecho(v) {
+  if (v === null || v === undefined) return false;
+  const n = String(v)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+  return !HDP_NO_HECHO.includes(n);
+}
+
 // ── ENDPOINT CENTRALIZADO: /api/estudios-paciente ──
 // Agrega esto en server.js de PPDT-Auth, antes del app.listen final.
 // Todas las apps del sistema llaman a este único endpoint para obtener
@@ -1343,9 +1361,7 @@ app.post("/api/estudios-paciente", async (req, res) => {
       .limit(1);
 
     const hdp = (hdpRows || [])[0] || null;
-    const NO_HECHA = ["No se realiza", "No aplica"];
-    const hdpHecha = (v) =>
-      v !== null && v !== undefined && v !== "" && !NO_HECHA.includes(v);
+    const hdpHecha = resultadoHDPHecho;
     const tipoYaExiste = (tipo) =>
       estudiosEncontrados.some((e) => e.TipoEstudio === tipo);
     // Para "Laboratorio" no alcanza con mirar si la categoría existe (agrupa
@@ -1619,7 +1635,7 @@ function practicaResueltaPorLaboratorio(descLower, filasLab) {
 // siguen resolviendo únicamente contra practicas_historicas/estado.
 function practicaResueltaPorHDP(descLower, hdp) {
   if (!hdp) return false;
-  const hecha = (v) => v !== null && v !== undefined && v !== "" && v !== "No se realiza";
+  const hecha = resultadoHDPHecho;
 
   if (descLower.includes("somf") || descLower.includes("sangre oculta")) return hecha(hdp.somf);
   if (descLower.includes("colon") || descLower.includes("vcc"))
