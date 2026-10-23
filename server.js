@@ -5,6 +5,28 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const path = require("path");
 const axios = require("axios");
+
+// ── PADRÓN IAPOS CON CORTE RÁPIDO ──
+// Si el webservice de IAPOS está caído, cada consulta esperaba hasta 10 s (o
+// más, si la conexión quedaba colgada) y eso hacía lentas todas las búsquedas.
+// Ahora: tope duro de 5 s por consulta y, si falla, se deja de consultar
+// durante 5 minutos (se responde al instante como "no se pudo verificar").
+let padronIaposEnPausaHasta = 0;
+async function padronPost(url, body, opciones = {}) {
+  if (Date.now() < padronIaposEnPausaHasta) {
+    throw new Error("Padrón IAPOS no disponible (reintento automático en unos minutos)");
+  }
+  const opts = { ...opciones, timeout: 4000 };
+  if (typeof AbortSignal !== "undefined" && typeof AbortSignal.timeout === "function") {
+    opts.signal = AbortSignal.timeout(5000);
+  }
+  try {
+    return await axios.post(url, body, opts);
+  } catch (e) {
+    padronIaposEnPausaHasta = Date.now() + 5 * 60 * 1000;
+    throw e;
+  }
+}
 const https = require("https");
 const agenteIapos = new https.Agent({ rejectUnauthorized: false });
 
@@ -1517,7 +1539,7 @@ app.get("/verificar-afiliado/:dni", async (req, res) => {
         </soap:Body>
     </soap:Envelope>`;
   try {
-    const response = await axios.post(
+    const response = await padronPost(
       "https://aswe.santafe.gov.ar/iapos-sw-srvt/servlet/abewsvalidaafi",
       soapBody,
       {
