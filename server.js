@@ -373,6 +373,15 @@ app.post("/login", async (req, res) => {
       tokenPayload.id_prestador = profesional.id_prestador;
     }
 
+    // Funciones que puede cumplir esta persona: su profesión + las
+    // adicionales (ej. un médico que en su sede también hace enfermería).
+    // Si tiene más de una, el login le pregunta con cuál entra.
+    const funciones = esPrestador || esEmpleado
+      ? [profesionValor]
+      : [...new Set([profesionValor, ...(profesional.roles_adicionales || [])].filter(Boolean))];
+    tokenPayload.funciones = funciones;
+    tokenPayload.profesion_principal = profesionValor;
+
     const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "8h" });
 
     res.json({
@@ -391,6 +400,7 @@ app.post("/login", async (req, res) => {
         ve_crm: tokenPayload.ve_crm,
         ve_practicas: tokenPayload.ve_practicas,
         ve_consultas: tokenPayload.ve_consultas,
+        funciones,
       },
     });
   } catch (error) {
@@ -399,6 +409,30 @@ app.post("/login", async (req, res) => {
   }
 });
 // ── CAMBIAR CONTRASEÑA ──
+// ── ELEGIR FUNCIÓN (para quien tiene más de una, ej. médico + enfermería) ──
+// Recibe el token del login y la función elegida; devuelve un token nuevo
+// con esa función como "profesion", así cada app (enfermería, portal del
+// médico, etc.) lo reconoce sin cambios. Lo que cargue queda a su nombre.
+app.post("/elegir-funcion", (req, res) => {
+  try {
+    const { token, funcion } = req.body || {};
+    if (!token || !funcion)
+      return res.status(400).json({ success: false, message: "Faltan datos." });
+    const decoded = jwt.verify(token, JWT_SECRET);
+    const funciones = decoded.funciones || [decoded.profesion];
+    if (!funciones.includes(funcion))
+      return res.status(403).json({ success: false, message: "No tenés habilitada esa función." });
+
+    const { iat, exp, ...datos } = decoded;
+    const nuevoToken = jwt.sign({ ...datos, profesion: funcion }, JWT_SECRET, {
+      expiresIn: "8h",
+    });
+    res.json({ success: true, token: nuevoToken, profesion: funcion });
+  } catch (error) {
+    res.status(401).json({ success: false, message: "Sesión inválida o vencida. Volvé a ingresar." });
+  }
+});
+
 app.post("/cambiar-password", async (req, res) => {
   try {
     const { usuario, password_actual, password_nuevo } = req.body;
@@ -600,17 +634,25 @@ app.post("/editar-permisos-profesional", async (req, res) => {
         .json({ success: false, message: "No autorizado." });
     }
 
-    const { dni, puede_cerrar_interno, puede_derivar, es_superuser } = req.body;
+    const { dni, puede_cerrar_interno, puede_derivar, es_superuser, roles_adicionales } = req.body;
     if (!dni)
       return res.status(400).json({ success: false, message: "Falta DNI." });
 
+    const cambios = {
+      puede_cerrar_interno: puede_cerrar_interno === true,
+      puede_derivar: puede_derivar === true,
+      es_superuser: es_superuser === true,
+    };
+    // Funciones adicionales (ej. médico que también hace enfermería).
+    // Solo se toca si viene en el pedido, para no borrarlo desde otras pantallas.
+    const FUNCIONES_PERMITIDAS = ["enfermera"];
+    if (Array.isArray(roles_adicionales)) {
+      cambios.roles_adicionales = roles_adicionales.filter((r) => FUNCIONES_PERMITIDAS.includes(r));
+    }
+
     const { error } = await supabase
       .from("profesionales")
-      .update({
-        puede_cerrar_interno: puede_cerrar_interno === true,
-        puede_derivar: puede_derivar === true,
-        es_superuser: es_superuser === true,
-      })
+      .update(cambios)
       .eq(
         "dni",
         dni
@@ -805,7 +847,7 @@ app.get("/usuarios-aprobados", async (req, res) => {
     const { data } = await supabase
       .from("profesionales")
       .select(
-        "dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp, telefono, email, matricula, puede_cerrar_interno, puede_derivar, es_superuser, activo",
+        "dni, nombre, apellido, profesion, usuario, rol, fecha_alta, id_sede_dp, telefono, email, matricula, puede_cerrar_interno, puede_derivar, es_superuser, activo, roles_adicionales",
       )
       // Activos y desactivados (los desactivados tienen fecha_alta).
       .not("fecha_alta", "is", null)

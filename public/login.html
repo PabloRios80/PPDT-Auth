@@ -130,6 +130,19 @@
           </p>
         </div>
 
+        <!-- ELEGIR FUNCIÓN (solo para quien tiene más de una, ej. médico + enfermería) -->
+        <div
+          id="panelFuncion"
+          class="hidden bg-white rounded-xl shadow-lg p-8 border border-blue-100"
+        >
+          <h2 class="text-lg font-bold text-blue-900 mb-1">¿Con qué función ingresás?</h2>
+          <p class="text-sm text-gray-400 mb-6">
+            Tenés más de una función habilitada. Lo que cargues queda a tu nombre.
+          </p>
+          <div id="botonesFuncion" class="space-y-3"></div>
+          <div id="funcionMsg" class="hidden mt-4 p-3 rounded-lg text-sm font-medium border"></div>
+        </div>
+
         <!-- CAMBIAR CONTRASEÑA (oculto hasta primer login) -->
         <div
           id="panelCambiarPass"
@@ -278,24 +291,7 @@
               .getElementById("panelCambiarPass")
               .classList.remove("hidden");
           } else {
-            // Redirigir según rol/profesion (con posible override por ?redirect=)
-            const prof = data.profesional;
-            const SEDES_DIRECTO_INDEX_MEDICO = [2, 4, 6];
-
-            let url;
-            if (
-              prof.profesion === "medico" &&
-              SEDES_DIRECTO_INDEX_MEDICO.includes(prof.id_sede_dp)
-            ) {
-              url = "https://cierre.diapreventivoiapos.com/index-medico.html";
-            } else {
-              url =
-                REDIRECCION_OVERRIDE[redirect] ||
-                REDIRECCION_POR_ROL[prof.profesion] ||
-                REDIRECCION_POR_ROL[prof.rol] ||
-                "/";
-            }
-            window.location.href = url + "?token=" + data.token;
+            continuarIngreso(data.profesional, data.token);
           }
         } catch (e) {
           mostrarMsg(msg, false, "Error de conexión.");
@@ -352,20 +348,81 @@
           const prof = JSON.parse(
             localStorage.getItem("dpProfesional") || "{}",
           );
-          const url =
-            REDIRECCION_OVERRIDE[redirect] ||
-            REDIRECCION_POR_ROL[prof.profesion] ||
-            REDIRECCION_POR_ROL[prof.rol] ||
-            "/";
           setTimeout(() => {
-            window.location.href =
-              url + "?token=" + localStorage.getItem("dpToken");
+            document.getElementById("panelCambiarPass").classList.add("hidden");
+            continuarIngreso(prof, localStorage.getItem("dpToken"));
           }, 1500);
         } catch (e) {
           mostrarMsg(msg, false, "Error de conexión.");
           btn.disabled = false;
           btn.innerHTML =
             '<i class="fas fa-key mr-2"></i>Cambiar contraseña y continuar';
+        }
+      }
+
+      // ── A dónde va cada uno después del login ──
+      const SEDES_DIRECTO_INDEX_MEDICO = [2, 4, 6];
+      function urlDestino(prof, funcion) {
+        if (funcion === "medico" && SEDES_DIRECTO_INDEX_MEDICO.includes(prof.id_sede_dp)) {
+          return "https://cierre.diapreventivoiapos.com/index-medico.html";
+        }
+        return (
+          REDIRECCION_OVERRIDE[redirect] ||
+          REDIRECCION_POR_ROL[funcion] ||
+          REDIRECCION_POR_ROL[prof.rol] ||
+          "/"
+        );
+      }
+
+      const NOMBRE_FUNCION = {
+        medico: { texto: "Médico", icono: "fa-user-md" },
+        enfermera: { texto: "Enfermería", icono: "fa-syringe" },
+        odontologo: { texto: "Odontología", icono: "fa-tooth" },
+        bioquimico: { texto: "Bioquímica", icono: "fa-vial" },
+        preventivista: { texto: "Preventivista", icono: "fa-clipboard-list" },
+      };
+
+      // Si tiene una sola función, entra directo como siempre. Si tiene más
+      // de una (ej. médico que también hace enfermería), elige con cuál.
+      function continuarIngreso(prof, token) {
+        const funciones = prof.funciones || [prof.profesion];
+        if (funciones.length <= 1) {
+          window.location.href = urlDestino(prof, prof.profesion) + "?token=" + token;
+          return;
+        }
+        document.getElementById("panelLogin").classList.add("hidden");
+        document.getElementById("panelFuncion").classList.remove("hidden");
+        document.getElementById("botonesFuncion").innerHTML = funciones
+          .map((f) => {
+            const n = NOMBRE_FUNCION[f] || { texto: f, icono: "fa-user" };
+            return `<button onclick="elegirFuncion('${f}')"
+              class="w-full py-3 rounded-lg font-bold text-white text-sm transition"
+              style="background-color: #014189">
+              <i class="fas ${n.icono} mr-2"></i>Ingresar como ${n.texto}
+            </button>`;
+          })
+          .join("");
+      }
+
+      async function elegirFuncion(funcion) {
+        const prof = JSON.parse(localStorage.getItem("dpProfesional") || "{}");
+        const msg = document.getElementById("funcionMsg");
+        try {
+          const res = await fetch("/elegir-funcion", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: localStorage.getItem("dpToken"), funcion }),
+          });
+          const data = await res.json();
+          if (!data.success) {
+            mostrarMsg(msg, false, data.message || "No se pudo ingresar.");
+            return;
+          }
+          localStorage.setItem("dpToken", data.token);
+          localStorage.setItem("dpProfesional", JSON.stringify({ ...prof, profesion: funcion }));
+          window.location.href = urlDestino(prof, funcion) + "?token=" + data.token;
+        } catch (e) {
+          mostrarMsg(msg, false, "Error de conexión.");
         }
       }
 
