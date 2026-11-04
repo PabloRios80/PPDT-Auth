@@ -382,6 +382,27 @@ app.post("/login", async (req, res) => {
     tokenPayload.funciones = funciones;
     tokenPayload.profesion_principal = profesionValor;
 
+    // Etiquetas para los botones del login cuando tiene más de una función
+    // (ej. "Médico — ATEM" / "Médico derivador — OPTIMUS").
+    const etiquetasFunciones = {};
+    if (funciones.length > 1) {
+      try {
+        if (idSedeValor) {
+          const { data: sede } = await supabase
+            .from("sedes_dp").select("nombre").eq("id", idSedeValor).maybeSingle();
+          if (sede) etiquetasFunciones[profesionValor] = sede.nombre;
+        }
+        if (funciones.includes("derivador") && profesional.id_institucion_derivadora) {
+          const { data: inst } = await supabase
+            .from("instituciones_derivadoras").select("nombre")
+            .eq("id", profesional.id_institucion_derivadora).maybeSingle();
+          if (inst) etiquetasFunciones.derivador = inst.nombre;
+        }
+      } catch (e) {
+        console.warn("No se pudieron armar las etiquetas de funciones:", e.message);
+      }
+    }
+
     const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: "8h" });
 
     res.json({
@@ -401,6 +422,7 @@ app.post("/login", async (req, res) => {
         ve_practicas: tokenPayload.ve_practicas,
         ve_consultas: tokenPayload.ve_consultas,
         funciones,
+        etiquetas_funciones: etiquetasFunciones,
       },
     });
   } catch (error) {
@@ -424,10 +446,37 @@ app.post("/elegir-funcion", (req, res) => {
       return res.status(403).json({ success: false, message: "No tenés habilitada esa función." });
 
     const { iat, exp, ...datos } = decoded;
-    const nuevoToken = jwt.sign({ ...datos, profesion: funcion }, JWT_SECRET, {
+    let cambios = { profesion: funcion, funcion_activa: funcion };
+
+    if (funcion === "derivador") {
+      // Médico que además es derivador externo (ej. Nieva: médico de ATEM
+      // y derivador de Optimus). Como derivador entra EXACTAMENTE igual que
+      // cualquier otro derivador: profesión médico, sin agenda interna,
+      // con derivación, y en la sede del circuito de derivadores (por ahora
+      // solo Espacio Prestacional Santa Fe = 1).
+      cambios = {
+        profesion: "medico",
+        funcion_activa: "derivador",
+        puede_derivar: true,
+        puede_cerrar_interno: false,
+        id_sede_dp: 1,
+      };
+    } else if (funciones.includes("derivador")) {
+      // Su función de siempre (ej. médico de ATEM): igual que antes, pero sin
+      // mezclar la derivación, que la hace entrando como derivador.
+      cambios.puede_derivar = false;
+    }
+
+    const nuevoToken = jwt.sign({ ...datos, ...cambios }, JWT_SECRET, {
       expiresIn: "8h",
     });
-    res.json({ success: true, token: nuevoToken, profesion: funcion });
+    res.json({
+      success: true,
+      token: nuevoToken,
+      profesion: cambios.profesion,
+      funcion_activa: funcion,
+      id_sede_dp: cambios.id_sede_dp ?? datos.id_sede_dp ?? null,
+    });
   } catch (error) {
     res.status(401).json({ success: false, message: "Sesión inválida o vencida. Volvé a ingresar." });
   }
@@ -645,7 +694,7 @@ app.post("/editar-permisos-profesional", async (req, res) => {
     };
     // Funciones adicionales (ej. médico que también hace enfermería).
     // Solo se toca si viene en el pedido, para no borrarlo desde otras pantallas.
-    const FUNCIONES_PERMITIDAS = ["enfermera"];
+    const FUNCIONES_PERMITIDAS = ["enfermera", "derivador"];
     if (Array.isArray(roles_adicionales)) {
       cambios.roles_adicionales = roles_adicionales.filter((r) => FUNCIONES_PERMITIDAS.includes(r));
     }

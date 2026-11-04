@@ -822,6 +822,14 @@
     </label>`
         : ""
     }
+    ${
+      p.profesion === "medico"
+        ? `<label class="flex items-start gap-2 bg-emerald-50 rounded-lg p-2 cursor-pointer">
+      <input type="checkbox" id="tarjetaEsDerivadorAdicional" ${(p.roles_adicionales || []).includes("derivador") ? "checked" : ""} class="mt-1" />
+      <span class="text-sm"><strong>Además es médico derivador</strong> (ej. de Optimus)<br/><span class="text-xs text-gray-500">Para un médico interno de una sede que también deriva: al ingresar elige "Médico" (su sede) o "Médico derivador". Como derivador entra igual que cualquier derivador de Espacio Prestacional. Tildá también "Médico externo / derivador".</span></span>
+    </label>`
+        : ""
+    }
     <button onclick="guardarContactoTarjeta()"
       class="w-full bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 mt-2">
       <i class="fas fa-save mr-1"></i>Guardar
@@ -899,12 +907,15 @@
                   .checked,
                 es_superuser:
                   document.getElementById("tarjetaEsSuperuser").checked,
-                // Solo se manda si la casilla existe (no aparece para enfermeras)
-                ...(document.getElementById("tarjetaCubreEnfermeria")
+                // Funciones adicionales: solo se mandan si alguna casilla
+                // existe en esta tarjeta (no aparecen para enfermeras, etc.)
+                ...(document.getElementById("tarjetaCubreEnfermeria") ||
+                document.getElementById("tarjetaEsDerivadorAdicional")
                   ? {
-                      roles_adicionales: document.getElementById("tarjetaCubreEnfermeria").checked
-                        ? ["enfermera"]
-                        : [],
+                      roles_adicionales: [
+                        ...(document.getElementById("tarjetaCubreEnfermeria")?.checked ? ["enfermera"] : []),
+                        ...(document.getElementById("tarjetaEsDerivadorAdicional")?.checked ? ["derivador"] : []),
+                      ],
                     }
                   : {}),
               }),

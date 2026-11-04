@@ -246,6 +246,10 @@
         espirometria: "https://prestadores.diapreventivoiapos.com",
         coordinacion_dp: "https://prestadores.diapreventivoiapos.com",
         coordinador_institucional: "https://preventivistas-crm.onrender.com/coordinadores.html",
+        // Médico que además es derivador externo: entra al portal como
+        // cualquier derivador (derivar, mis derivaciones, cierre DP)
+        derivador:
+          "https://derivaciones.diapreventivoiapos.com/portal-profesional.html",
       };
       let usuarioActual = "";
 
@@ -382,6 +386,7 @@
         odontologo: { texto: "Odontología", icono: "fa-tooth" },
         bioquimico: { texto: "Bioquímica", icono: "fa-vial" },
         preventivista: { texto: "Preventivista", icono: "fa-clipboard-list" },
+        derivador: { texto: "Médico derivador", icono: "fa-paper-plane" },
       };
 
       // Si tiene una sola función, entra directo como siempre. Si tiene más
@@ -397,10 +402,12 @@
         document.getElementById("botonesFuncion").innerHTML = funciones
           .map((f) => {
             const n = NOMBRE_FUNCION[f] || { texto: f, icono: "fa-user" };
+            // Ej. "Médico — ATEM" / "Médico derivador — OPTIMUS"
+            const etiqueta = (prof.etiquetas_funciones || {})[f];
             return `<button onclick="elegirFuncion('${f}')"
               class="w-full py-3 rounded-lg font-bold text-white text-sm transition"
-              style="background-color: #014189">
-              <i class="fas ${n.icono} mr-2"></i>Ingresar como ${n.texto}
+              style="background-color: ${f === "derivador" ? "#047857" : "#014189"}">
+              <i class="fas ${n.icono} mr-2"></i>Ingresar como ${n.texto}${etiqueta ? " — " + etiqueta : ""}
             </button>`;
           })
           .join("");
@@ -421,7 +428,10 @@
             return;
           }
           localStorage.setItem("dpToken", data.token);
-          localStorage.setItem("dpProfesional", JSON.stringify({ ...prof, profesion: funcion }));
+          localStorage.setItem(
+            "dpProfesional",
+            JSON.stringify({ ...prof, profesion: data.profesion || funcion, funcion_activa: funcion }),
+          );
           window.location.href = urlDestino(prof, funcion) + "?token=" + data.token;
         } catch (e) {
           mostrarMsg(msg, false, "Error de conexión.");
