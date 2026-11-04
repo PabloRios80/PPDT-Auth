@@ -186,7 +186,7 @@ async function buscarAfiliado() {
         document.getElementById('resultado').classList.remove('hidden');
 
         renderTarjetaAfiliado(iapos, dni);
-        renderHojaDeVida(hojaDeVida);
+        renderHojaDeVida(hojaDeVida, ultimoDP, dniNorm);
         renderUltimoDP(ultimoDP);
         renderPendientes(pendientes);
         renderEstudios(estudios);
@@ -251,61 +251,35 @@ function etiquetaFuma(valor) {
     return mapa[valor] || { texto: 'Sin dato', clase: 'bg-gray-50 text-gray-300' };
 }
 
-function renderHojaDeVida(data) {
-    const el = document.getElementById('tarjetaHojaDeVida');
-    const hv = data.hojaDeVida;
+// ── HOJA DE VIDA ──
+// Solo cuenta como "del DP actual" la Hoja de Vida cargada DESPUÉS del último
+// cierre de DP. Las anteriores (y las migradas de ATEM, origen *_HISTORICO)
+// se pueden consultar como antecedente, pero NO disparan el algoritmo: el
+// afiliado tiene que completar una nueva.
+let _hvContador = 0;
 
-    if (!hv && data.esMenor && data.datosMenor) {
-        const m = data.datosMenor;
-        const fechaMenor = m.fecha_carga
-            ? new Date(m.fecha_carga).toLocaleDateString('es-AR', {year:'numeric', month:'long', day:'numeric'})
-            : '';
-        const factoresMenor = [
-            ['Tabaco', etiquetaSiNo(m.tabaco)],
-            ['Alcohol', etiquetaSiNo(m.alcohol)],
-            ['Otras sustancias', etiquetaSiNo(m.sustancias)],
-            ['Violencia/abuso', etiquetaSiNo(m.violencia)],
-            ['Tristeza/aislamiento', etiquetaSiNo(m.tristeza)],
-            ['Preocupación por peso/alimentación', etiquetaSiNo(m.alim_trastorno)],
-            ['Vacunas NO al día', etiquetaSiNo(m.vacunas === 'no' ? 'si' : (m.vacunas === 'si' ? 'no' : m.vacunas))],
-            ['Antecedente familiar hipertensión', etiquetaSiNo(m.fam_hipertension)],
-            ['Antecedente familiar diabetes', etiquetaSiNo(m.fam_diabetes)],
-            ['Antecedente familiar cáncer', etiquetaSiNo(m.fam_cancer)],
-        ];
-        el.innerHTML = `
-            <div class="flex justify-between items-start mb-2">
-                <h3 class="font-bold text-gray-700"><i class="fas fa-file-medical text-green-500 mr-2"></i>Hoja de Vida (Menor)</h3>
-                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✅ Completada</span>
-            </div>
-            <p class="text-sm text-gray-500 mb-3">Cargada el ${fechaMenor}${m.condicion_salud === 'si' ? ' · <span class="text-red-600 font-bold">🔴 Condición de salud diagnosticada' + (m.condicion_detalle ? ': ' + m.condicion_detalle : '') + '</span>' : ''}</p>
-            <button onclick="document.getElementById('detalleHojaVida').classList.toggle('hidden'); this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');"
-                class="text-blue-600 text-sm font-bold mb-2">
-                <i class="fas fa-chevron-down mr-1"></i>Ver resultados
-            </button>
-            <div id="detalleHojaVida" class="hidden">
-                <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    ${factoresMenor.map(([label, tag]) => `
-                        <div class="flex justify-between items-center rounded-lg p-2 text-xs ${tag.clase}">
-                            <span>${label}</span><span class="font-bold ml-2">${tag.texto}</span>
-                        </div>`).join('')}
-                </div>
-            </div>`;
-        el.classList.remove('hidden');
-        return;
-    }
+function fechaLarga(f) {
+    if (!f) return 'fecha desconocida';
+    const d = new Date(f);
+    if (isNaN(d)) return String(f);
+    return d.toLocaleDateString('es-AR', {year:'numeric', month:'long', day:'numeric'});
+}
 
-    if (!hv) {
-        el.innerHTML = `
-            <h3 class="font-bold text-gray-700 mb-2"><i class="fas fa-file-medical text-red-400 mr-2"></i>Hoja de Vida</h3>
-            <p class="text-red-600 text-sm font-bold">❌ No completó la Hoja de Vida.</p>`;
-        el.classList.remove('hidden');
-        return;
-    }
+function fechaCierreUltimoDP(ultimoDP) {
+    return ultimoDP && ultimoDP.success && ultimoDP.ultimoDP && ultimoDP.ultimoDP.fechax
+        ? String(ultimoDP.ultimoDP.fechax).slice(0, 10)
+        : null;
+}
 
-    const fecha = hv.fecha_carga
-        ? new Date(hv.fecha_carga).toLocaleDateString('es-AR', {year:'numeric', month:'long', day:'numeric'})
-        : '';
+function esHvDelCicloActual(fechaCarga, origen, ultimoDP) {
+    if (!fechaCarga) return false;
+    if (origen && String(origen).toUpperCase().includes('HISTORICO')) return false;
+    const cierre = fechaCierreUltimoDP(ultimoDP);
+    if (!cierre) return true;
+    return String(fechaCarga).slice(0, 10) > cierre;
+}
 
+function htmlDetalleAdulto(hv) {
     const factores = [
         ['Hipertensión', etiquetaSiNo(hv.hipertension)],
         ['Diabetes', etiquetaSiNo(hv.diabetes)],
@@ -329,31 +303,152 @@ function renderHojaDeVida(data) {
         ['Antecedente cáncer cuello uterino', etiquetaSiNo(hv.cancer_cuello_utero)],
         ['Antecedente cáncer de próstata', etiquetaSiNo(hv.cancer_de_prostata)],
     ];
+    return `
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+            <div class="bg-gray-50 rounded-lg p-2 text-xs text-gray-600">Altura: <strong>${hv.altura ?? '-'}</strong></div>
+            <div class="bg-gray-50 rounded-lg p-2 text-xs text-gray-600">Peso: <strong>${hv.peso ?? '-'}</strong></div>
+            <div class="bg-gray-50 rounded-lg p-2 text-xs text-gray-600">BMI: <strong>${hv.bmi ?? '-'} (${hv.categoria_bmi ?? '-'})</strong></div>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            ${factores.map(([label, tag]) => `
+                <div class="flex justify-between items-center rounded-lg p-2 text-xs ${tag.clase}">
+                    <span>${label}</span><span class="font-bold ml-2">${tag.texto}</span>
+                </div>`).join('')}
+        </div>`;
+}
+
+function htmlDetalleMenor(m) {
+    const factoresMenor = [
+        ['Tabaco', etiquetaSiNo(m.tabaco)],
+        ['Alcohol', etiquetaSiNo(m.alcohol)],
+        ['Otras sustancias', etiquetaSiNo(m.sustancias)],
+        ['Violencia/abuso', etiquetaSiNo(m.violencia)],
+        ['Tristeza/aislamiento', etiquetaSiNo(m.tristeza)],
+        ['Preocupación por peso/alimentación', etiquetaSiNo(m.alim_trastorno)],
+        ['Vacunas NO al día', etiquetaSiNo(m.vacunas === 'no' ? 'si' : (m.vacunas === 'si' ? 'no' : m.vacunas))],
+        ['Antecedente familiar hipertensión', etiquetaSiNo(m.fam_hipertension)],
+        ['Antecedente familiar diabetes', etiquetaSiNo(m.fam_diabetes)],
+        ['Antecedente familiar cáncer', etiquetaSiNo(m.fam_cancer)],
+    ];
+    return `
+        ${m.condicion_salud === 'si' ? '<p class="text-sm text-red-600 font-bold mb-2">🔴 Condición de salud diagnosticada' + (m.condicion_detalle ? ': ' + m.condicion_detalle : '') + '</p>' : ''}
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            ${factoresMenor.map(([label, tag]) => `
+                <div class="flex justify-between items-center rounded-lg p-2 text-xs ${tag.clase}">
+                    <span>${label}</span><span class="font-bold ml-2">${tag.texto}</span>
+                </div>`).join('')}
+        </div>`;
+}
+
+function botonDesplegable(texto, idDestino) {
+    return `<button onclick="document.getElementById('${idDestino}').classList.toggle('hidden'); this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');"
+        class="text-blue-600 text-sm font-bold mb-2">
+        <i class="fas fa-chevron-down mr-1"></i>${texto}
+    </button>`;
+}
+
+function renderHojaDeVida(data, ultimoDP, dniNorm) {
+    const el = document.getElementById('tarjetaHojaDeVida');
+    const hv = data.hojaDeVida;
+    const m = (!hv && data.esMenor) ? data.datosMenor : null;
+    const ultima = hv || m;
+    const esMenor = !hv && !!m;
+    const cierre = fechaCierreUltimoDP(ultimoDP);
+    const vigente = ultima ? esHvDelCicloActual(ultima.fecha_carga, ultima.origen_carga, ultimoDP) : false;
+
+    window._hvConsulta = { dni: dniNorm, ultima, esMenor, vigente };
+
+    const botonAnteriores = `
+        <div class="mt-3 pt-3 border-t border-gray-100">
+            <button onclick="verHojasDeVidaAnteriores()" class="text-gray-600 hover:text-blue-700 text-sm font-bold">
+                <i class="fas fa-history mr-1"></i>Ver hojas de vida anteriores
+            </button>
+            <div id="listaHojasAnteriores" class="hidden mt-3 space-y-2"></div>
+        </div>`;
+
+    if (vigente) {
+        const idDet = 'detalleHojaVida';
+        el.innerHTML = `
+            <div class="flex justify-between items-start mb-2">
+                <h3 class="font-bold text-gray-700"><i class="fas fa-file-medical text-green-500 mr-2"></i>Hoja de Vida${esMenor ? ' (Menor)' : ''}</h3>
+                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✅ Completada — DP actual</span>
+            </div>
+            <p class="text-sm text-gray-500 mb-3">Cargada el ${fechaLarga(ultima.fecha_carga)}${ultima.origen_carga ? ' · Origen: ' + ultima.origen_carga : ''}</p>
+            ${botonDesplegable('Ver resultados', idDet)}
+            <div id="${idDet}" class="hidden">${esMenor ? htmlDetalleMenor(ultima) : htmlDetalleAdulto(ultima)}</div>
+            ${botonAnteriores}`;
+        el.classList.remove('hidden');
+        return;
+    }
+
+    // No hay Hoja de Vida del DP actual
+    const motivo = !ultima
+        ? 'El afiliado nunca completó la Hoja de Vida.'
+        : (ultima.origen_carga && String(ultima.origen_carga).toUpperCase().includes('HISTORICO'))
+            ? `La única que figura es un registro histórico migrado (${ultima.origen_carga}), no una Hoja de Vida completada por el afiliado.`
+            : `La última es del ${fechaLarga(ultima.fecha_carga)}${cierre ? ', anterior al último DP (' + fechaLarga(cierre) + ')' : ''}.`;
 
     el.innerHTML = `
         <div class="flex justify-between items-start mb-2">
-            <h3 class="font-bold text-gray-700"><i class="fas fa-file-medical text-green-500 mr-2"></i>Hoja de Vida</h3>
-            <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold">✅ Completada</span>
+            <h3 class="font-bold text-gray-700"><i class="fas fa-file-medical text-red-500 mr-2"></i>Hoja de Vida</h3>
+            <span class="bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-bold">❌ Falta la del DP actual</span>
         </div>
-        <p class="text-sm text-gray-500 mb-3">Cargada el ${fecha}${hv.origen_carga ? ' · Origen: ' + hv.origen_carga : ''}</p>
-        <button onclick="document.getElementById('detalleHojaVida').classList.toggle('hidden'); this.querySelector('i').classList.toggle('fa-chevron-down'); this.querySelector('i').classList.toggle('fa-chevron-up');"
-            class="text-blue-600 text-sm font-bold mb-2">
-            <i class="fas fa-chevron-down mr-1"></i>Ver resultados
-        </button>
-        <div id="detalleHojaVida" class="hidden">
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-                <div class="bg-gray-50 rounded-lg p-2 text-xs text-gray-600">Altura: <strong>${hv.altura ?? '-'}</strong></div>
-                <div class="bg-gray-50 rounded-lg p-2 text-xs text-gray-600">Peso: <strong>${hv.peso ?? '-'}</strong></div>
-                <div class="bg-gray-50 rounded-lg p-2 text-xs text-gray-600">BMI: <strong>${hv.bmi ?? '-'} (${hv.categoria_bmi ?? '-'})</strong></div>
-            </div>
-            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                ${factores.map(([label, tag]) => `
-                    <div class="flex justify-between items-center rounded-lg p-2 text-xs ${tag.clase}">
-                        <span>${label}</span><span class="font-bold ml-2">${tag.texto}</span>
-                    </div>`).join('')}
-            </div>
-        </div>`;
+        <div class="semaforo-rojo rounded-lg p-3 text-sm">
+            <p class="font-bold">No hay una Hoja de Vida cargada para este Día Preventivo.</p>
+            <p class="mt-1">${motivo}</p>
+            <p class="mt-1">El afiliado tiene que completar una <strong>nueva Hoja de Vida</strong>${esMenor ? ' (pediátrica, la completa el responsable)' : ''}. Sin ella el algoritmo <strong>no autoriza las prácticas</strong>.</p>
+        </div>
+        ${ultima ? botonAnteriores : ''}`;
     el.classList.remove('hidden');
+}
+
+async function verHojasDeVidaAnteriores() {
+    const cont = document.getElementById('listaHojasAnteriores');
+    if (!cont) return;
+    if (!cont.classList.contains('hidden')) { cont.classList.add('hidden'); return; }
+    cont.classList.remove('hidden');
+    cont.innerHTML = '<p class="text-gray-400 text-sm"><i class="fas fa-spinner fa-spin mr-1"></i>Cargando...</p>';
+
+    const ctx = window._hvConsulta || {};
+    let hojas = [];
+    try {
+        const res = await fetch(`/api/hojas-de-vida/${ctx.dni}`, {
+            headers: { 'Authorization': `Bearer ${localStorage.getItem('dpToken')}` }
+        });
+        if (res.ok) {
+            const data = await res.json();
+            hojas = data.hojas || [];
+        }
+    } catch (e) { /* si el servidor todavía no tiene el listado, se usa la última conocida */ }
+
+    if (hojas.length === 0 && ctx.ultima) {
+        hojas = [{ tipo: ctx.esMenor ? 'menor' : 'adulto', fecha_carga: ctx.ultima.fecha_carga, origen_carga: ctx.ultima.origen_carga, datos: ctx.ultima }];
+    }
+    // Si la última es la del DP actual, ya se muestra arriba: acá van solo las anteriores
+    if (ctx.vigente && ctx.ultima) {
+        hojas = hojas.filter(h => String(h.fecha_carga) !== String(ctx.ultima.fecha_carga));
+    }
+
+    if (hojas.length === 0) {
+        cont.innerHTML = '<p class="text-gray-400 text-sm">No hay hojas de vida anteriores.</p>';
+        return;
+    }
+
+    cont.innerHTML = hojas.map(h => {
+        const id = 'hvAnterior' + (++_hvContador);
+        const datos = h.datos || {};
+        return `
+            <div class="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="font-bold text-gray-700 text-sm">${fechaLarga(h.fecha_carga)}</p>
+                        <p class="text-xs text-gray-400">${h.tipo === 'menor' ? 'Pediátrica' : 'Adultos'}${h.origen_carga ? ' · Origen: ' + h.origen_carga : ''}</p>
+                    </div>
+                    ${botonDesplegable('Ver', id)}
+                </div>
+                <div id="${id}" class="hidden mt-2">${h.tipo === 'menor' ? htmlDetalleMenor(datos) : htmlDetalleAdulto(datos)}</div>
+            </div>`;
+    }).join('');
 }
 
 function renderUltimoDP(data) {
