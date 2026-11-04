@@ -95,6 +95,8 @@
             <input
               type="text"
               id="loginUsuario"
+              autocapitalize="none"
+              autocorrect="off"
               class="w-full border border-gray-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
               placeholder="Tu usuario"
             />
@@ -248,7 +250,7 @@
       let usuarioActual = "";
 
       async function hacerLogin() {
-        const usuario = document.getElementById("loginUsuario").value.trim();
+        const usuario = document.getElementById("loginUsuario").value.trim().toLowerCase();
         const password = document.getElementById("loginPassword").value;
         const btn = document.getElementById("btnLogin");
         const msg = document.getElementById("loginMsg");

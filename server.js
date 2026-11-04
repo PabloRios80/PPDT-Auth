@@ -1836,23 +1836,65 @@ app.get("/api/derivaciones-afiliado/:dni", async (req, res) => {
 });
 
 // Último DP por DNI
+// Variantes con que puede estar guardado un mismo DNI en la base: con o sin
+// ceros adelante y con o sin letra (F/M/L de LC/LE). Se busca por igualdad
+// contra estas variantes, no por sufijo: "%5125963" también encontraba a
+// otra persona con DNI 15125963.
+function variantesDniHV(dni) {
+  const num = String(dni || "").replace(/\D/g, "").replace(/^0+/, "");
+  if (!num) return [String(dni || "")];
+  return [num, "0" + num, "F" + num, "M" + num, "L" + num, "F0" + num, "M0" + num];
+}
+
 app.get("/api/ultimo-dp/:dni", async (req, res) => {
   try {
     const token = req.headers.authorization?.replace("Bearer ", "");
     if (!token) return res.status(401).json({ success: false });
     jwt.verify(token, JWT_SECRET);
+    // Los cierres anulados no cuentan como último DP.
     const { data } = await supabase
       .from("historial_dia_preventivo")
       .select("fechax, efector, tipo")
-      .eq("dni", req.params.dni)
+      .in("dni", variantesDniHV(req.params.dni))
+      .neq("estado_registro", "anulado")
       .order("fechax", { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
     res.json({ success: true, ultimoDP: data || null });
   } catch (e) {
     res.json({ success: true, ultimoDP: null });
   }
 });
+
+// Trae TODAS las hojas de vida de un DNI (adultos: historial_hoja_de_vida y
+// afiliados; menores: afiliados_menores), de la más nueva a la más vieja.
+// La misma carga suele estar en historial_hoja_de_vida y en afiliados: se
+// deja una sola por tipo y minuto de carga.
+async function obtenerHojasDeVida(dni) {
+  const variantes = variantesDniHV(dni);
+  const [hist, adult, menor] = await Promise.all([
+    supabase.from("historial_hoja_de_vida").select("*").in("dni", variantes),
+    supabase.from("afiliados").select("*").in("dni", variantes),
+    supabase.from("afiliados_menores").select("*").in("dni", variantes),
+  ]);
+  const hojas = [];
+  (hist.data || []).forEach((d) => hojas.push({ tipo: "adulto", d }));
+  (adult.data || []).forEach((d) => hojas.push({ tipo: "adulto", d }));
+  (menor.data || []).forEach((d) => hojas.push({ tipo: "menor", d }));
+
+  const vistas = new Set();
+  return hojas
+    .sort(
+      (a, b) =>
+        new Date(b.d.fecha_carga || 0) - new Date(a.d.fecha_carga || 0),
+    )
+    .filter((h) => {
+      const clave = `${h.tipo}|${String(h.d.fecha_carga || "").slice(0, 16)}`;
+      if (vistas.has(clave)) return false;
+      vistas.add(clave);
+      return true;
+    });
+}
 
 app.get("/api/hoja-de-vida/:dni", async (req, res) => {
   try {
@@ -1860,67 +1902,56 @@ app.get("/api/hoja-de-vida/:dni", async (req, res) => {
     if (!token) return res.status(401).json({ success: false });
     jwt.verify(token, JWT_SECRET);
 
-    // El frontend manda el DNI sin ninguna letra (dniNorm), pero algunos
-    // DNIs viejos están guardados en la base CON una letra adelante (ej.
-    // "F6717904"). Se busca por sufijo (termina con estos dígitos), no
-    // por igualdad exacta, para no perder esos casos.
-    const dniBuscado = `%${req.params.dni}`;
+    // Se devuelve la hoja de vida MÁS NUEVA entre las tres tablas (antes se
+    // miraba primero el historial y, si había algo, no se veía una carga más
+    // reciente en afiliados). El frontend decide si es la del DP actual.
+    // Las migradas de ATEM (origen *_HISTORICO) solo se devuelven si no hay
+    // ninguna hoja de vida real completada por el afiliado.
+    const hojas = await obtenerHojasDeVida(req.params.dni);
+    const esHistorica = (h) =>
+      String(h.d.origen_carga || "").toUpperCase().includes("HISTORICO");
+    const ultima = hojas.find((h) => !esHistorica(h)) || hojas[0];
 
-    const { data } = await supabase
-      .from("historial_hoja_de_vida")
-      .select("*")
-      .ilike("dni", dniBuscado)
-      .order("fecha_carga", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (data) {
-      return res.json({ success: true, hojaDeVida: data, esMenor: false });
+    if (!ultima) {
+      return res.json({ success: true, hojaDeVida: null, esMenor: false });
     }
-
-    // Si no está en el historial (log de cada carga), puede que sí exista
-    // en la tabla maestra afiliados (mismo shape de columnas) — pasa
-    // cuando el registro se generó por otro circuito que no dejó rastro
-    // en historial_hoja_de_vida.
-    const { data: dataAfiliado } = await supabase
-      .from("afiliados")
-      .select("*")
-      .ilike("dni", dniBuscado)
-      .limit(1)
-      .single();
-
-    if (dataAfiliado) {
-      return res.json({
-        success: true,
-        hojaDeVida: dataAfiliado,
-        esMenor: false,
-      });
-    }
-
-    // Si tampoco está ahí, buscar en afiliados_menores — es un formulario
-    // y una tabla completamente distintos, con otros campos (no una Hoja
-    // de Vida "incompleta": simplemente vive en otro circuito, el de
-    // menores).
-    const { data: dataMenor } = await supabase
-      .from("afiliados_menores")
-      .select("*")
-      .ilike("dni", dniBuscado)
-      .order("fecha_carga", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (dataMenor) {
+    if (ultima.tipo === "menor") {
       return res.json({
         success: true,
         hojaDeVida: null,
         esMenor: true,
-        datosMenor: dataMenor,
+        datosMenor: ultima.d,
       });
     }
-
-    res.json({ success: true, hojaDeVida: null, esMenor: false });
+    res.json({ success: true, hojaDeVida: ultima.d, esMenor: false });
   } catch (e) {
     res.json({ success: true, hojaDeVida: null, esMenor: false });
+  }
+});
+
+// Listado de todas las hojas de vida del afiliado, por fecha (botón "Ver hojas
+// de vida anteriores" en consulta-afiliado).
+app.get("/api/hojas-de-vida/:dni", async (req, res) => {
+  try {
+    const token = req.headers.authorization?.replace("Bearer ", "");
+    if (!token) return res.status(401).json({ success: false });
+    jwt.verify(token, JWT_SECRET);
+
+    const hojas = await obtenerHojasDeVida(req.params.dni);
+    res.json({
+      success: true,
+      hojas: hojas.map((h) => {
+        const { datos_origen, ...datos } = h.d; // la planilla cruda de ATEM no hace falta
+        return {
+          tipo: h.tipo,
+          fecha_carga: h.d.fecha_carga,
+          origen_carga: h.d.origen_carga || null,
+          datos,
+        };
+      }),
+    });
+  } catch (e) {
+    res.status(500).json({ success: false, hojas: [] });
   }
 });
 // Sedes de un prestador
